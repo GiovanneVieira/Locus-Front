@@ -1,11 +1,11 @@
-import Header from "@/components/Header"
+import Header from '@/components/Header/Header';
 
 const Home = () => {
-  return (
-    <div>
-        <Header></Header>
-    </div>
-  )
-}
+    return (
+        <div>
+            <Header></Header>
+        </div>
+    );
+};
 
-export default Home
+export default Home;

@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import Logo from './LocusLogo';
+import Logo from '../LocusLogo';
 
 const Header = () => {
     return (
