@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: vite_app
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host 0.0.0.0
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: package-lock.json
