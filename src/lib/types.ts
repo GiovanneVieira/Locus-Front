@@ -47,3 +47,8 @@ export interface Comparison {
   label: string
   value: string
 }
+
+export interface PlanningDay {
+  titulo: string
+  descricao: string
+}
