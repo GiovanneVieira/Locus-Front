@@ -29,3 +29,10 @@ export interface Step {
   etapa: string
   descricao: string
 }
+
+export interface Insight {
+  titulo: string
+  valor: string
+  descricao: string
+  icone?: LucideIconType
+}
