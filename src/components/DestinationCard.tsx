@@ -4,6 +4,7 @@ import type { Destiny } from "../lib/types"
 
 interface DestinationCardProps extends Destiny {
   gradiente: string
+  highlight: string
 }
 
 export const DestinationCard = ({
