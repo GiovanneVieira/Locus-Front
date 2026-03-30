@@ -2,6 +2,7 @@ interface TrendChartProps {
   data: { label: string; value: number }[]
   title: string
   trendText: string
+  height?: string
 }
 
 export const TrendChart = ({ data, title, trendText }: TrendChartProps) => (
