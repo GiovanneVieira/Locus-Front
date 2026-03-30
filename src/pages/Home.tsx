@@ -236,6 +236,7 @@ export default function Home() {
                       ? "bg-[linear-gradient(145deg,rgba(34,197,255,.62),rgba(99,102,241,.34),rgba(255,255,255,.02))]"
                       : "bg-[linear-gradient(145deg,rgba(255,132,84,.62),rgba(124,58,237,.24),rgba(255,255,255,.02))]"
                 }
+                highlight={""}
               />
             ))}
           </div>

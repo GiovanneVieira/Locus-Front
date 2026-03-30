@@ -36,3 +36,14 @@ export interface Insight {
   descricao: string
   icone?: LucideIconType
 }
+
+export interface LoyaltyProgram {
+  nome: string
+  saldo: string
+  progresso: number
+}
+
+export interface Comparison {
+  label: string
+  value: string
+}
