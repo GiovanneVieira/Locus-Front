@@ -1,15 +1,21 @@
 import { Link } from "react-router"
 import {
   ArrowRight,
+  BellRing,
   CalendarDays,
+  CheckCircle2,
   Compass,
   CreditCard,
   Globe,
+  Landmark,
   Orbit,
+  Plane,
   Radar,
   Route,
+  ShieldCheck,
   Sparkles,
   TrendingDown,
+  Waves,
 } from "lucide-react"
 
 import Header from "@/components/Header/Header"
@@ -19,10 +25,11 @@ import { StatCard } from "@/components/StatCard"
 import { DestinationCard } from "@/components/DestinationCard"
 import { ExperiencePanel } from "@/components/ExperiencePanel"
 import { Footer } from "@/components/Footer"
-
-// Utilizando as interfaces retomadas
-// Utilizando as interfaces retomadas
 import type { Destiny, Differential, Indicator, Step } from "../lib/types"
+import { AlertCard } from "@/components/AlertCard.tsx"
+import { FeatureCheck } from "@/components/FeatureCheck.tsx"
+import { StepCard } from "@/components/StepCard.tsx"
+import { InfoCard } from "@/components/InfoCard.tsx"
 
 const destinos: Destiny[] = [
   {
@@ -233,9 +240,130 @@ export default function Home() {
             ))}
           </div>
         </section>
+        {/* SEÇÃO SENSORIAL E ALERTAS */}
+        <section className="mx-auto grid max-w-7xl gap-6 px-6 py-20 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="glass-card p-8">
+            <SectionBadge icon={Waves} className="mb-4">
+              Viagem como experiência sensorial
+            </SectionBadge>
+            <h2 className="max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+              O usuário precisa imaginar a viagem antes de comprá-la.
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
+              O diferencial mais forte do produto é transformar decisão em
+              percepção: visualizar bairros, entender intensidade, custo e
+              ritmo.
+            </p>
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              <InfoCard
+                icone={Landmark}
+                titulo="Pontos icônicos"
+                descricao="Áreas principais e leitura visual do que realmente vale no roteiro."
+              />
+              <InfoCard
+                icone={Plane}
+                titulo="Chegada mais clara"
+                descricao="O planejamento mostra o início da jornada e reduz a ansiedade."
+              />
+              <InfoCard
+                icone={ShieldCheck}
+                titulo="Mais confiança"
+                descricao="Decisões seguras quando o usuário sente o destino com antecedência."
+              />
+              <InfoCard
+                icone={CheckCircle2}
+                titulo="Planejamento útil"
+                descricao="Suporte real para fechar sua próxima viagem com convicção."
+              />
+            </div>
+          </div>
 
-        {/* JORNADA E CTAs FINAIS MANTIDOS CONFORME ORIGINAL */}
-        {/* ... (Seção Sensorial, Alertas e Jornada aqui) ... */}
+          <div className="glass-card p-8">
+            <SectionBadge icon={BellRing} className="mb-4">
+              Oportunidades em destaque
+            </SectionBadge>
+            <h2 className="text-2xl font-semibold md:text-3xl">
+              Alertas que fazem o usuário agir
+            </h2>
+            <div className="mt-6 space-y-4">
+              {alertas.map((item) => (
+                <AlertCard key={item} text={item} />
+              ))}
+            </div>
+            <Button asChild className="mt-6 w-full rounded-full py-6">
+              <Link to="/radar">Abrir radar completo</Link>
+            </Button>
+          </div>
+        </section>
+
+        {/* JORNADA DO PRODUTO */}
+        <section className="mx-auto max-w-7xl px-6 py-20">
+          <div className="mb-10">
+            <SectionBadge icon={Route} className="mb-4">
+              Jornada do produto
+            </SectionBadge>
+            <h2 className="max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
+              Um fluxo claro do início ao fechamento da viagem.
+            </h2>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {passos.map((item, i) => (
+              <StepCard
+                key={item.etapa}
+                etapa={i + 1}
+                titulo={item.etapa}
+                descricao={item.descricao}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* VITRINE / CTA FINAL */}
+        <section className="mx-auto max-w-7xl px-6 pt-8 pb-24">
+          <div className="glass-card premium-ring overflow-hidden p-8 md:p-12">
+            <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+              <div>
+                <SectionBadge icon={Sparkles} className="mb-4">
+                  Front com cara de produto internacional
+                </SectionBadge>
+                <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
+                  O Locus pode virar vitrine de portfólio de alto nível.
+                </h2>
+                <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
+                  Base com hero forte, seções com profundidade visual e espaço
+                  para integração de dados reais e mapas.
+                </p>
+                <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                  <Button asChild className="rounded-full px-6 py-6">
+                    <Link
+                      to="/destinos"
+                      className="inline-flex items-center gap-2"
+                    >
+                      Continuar evoluindo <ArrowRight size={16} />
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="rounded-full border-white/15 bg-white/5 px-6 py-6"
+                  >
+                    <Link to="/planejamento">Abrir planejamento</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-4">
+                {[
+                  "Hero cinematográfico e premium",
+                  "Cards com profundidade e movimento",
+                  "Narrativa visual clara para venda",
+                  "Base pronta para microinterações",
+                ].map((text) => (
+                  <FeatureCheck key={text} text={text} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
