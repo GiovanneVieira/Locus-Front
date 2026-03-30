@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import {
   ArrowRight,
   CheckCircle2,
@@ -39,12 +39,12 @@ function MilesPage() {
       <main className="overflow-hidden">
         <section className="relative">
           <div className="pointer-events-none absolute inset-0">
-            <div className="hero-orb left-[-120px] top-[80px]" />
-            <div className="hero-orb-secondary right-[-180px] top-[20px]" />
+            <div className="hero-orb top-[80px] left-[-120px]" />
+            <div className="hero-orb-secondary top-[20px] right-[-180px]" />
             <div className="grid-pattern absolute inset-0 opacity-35" />
           </div>
 
-          <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-16 md:pb-20 md:pt-20">
+          <div className="relative mx-auto max-w-7xl px-6 pt-16 pb-16 md:pt-20 md:pb-20">
             <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="section-badge premium-ring mb-4">
@@ -54,12 +54,15 @@ function MilesPage() {
 
                 <h1 className="max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl xl:text-6xl">
                   Economizar pode ser
-                  <span className="gradient-text block">bonito, simples e inteligente.</span>
+                  <span className="gradient-text block">
+                    bonito, simples e inteligente.
+                  </span>
                 </h1>
 
                 <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">
-                  Esta tela mostra ao usuário onde concentrar gastos, quando
-                  faz sentido emitir e como comparar milhas com dinheiro de forma clara.
+                  Esta tela mostra ao usuário onde concentrar gastos, quando faz
+                  sentido emitir e como comparar milhas com dinheiro de forma
+                  clara.
                 </p>
               </div>
 
@@ -88,7 +91,9 @@ function MilesPage() {
                   <span className="text-sm font-medium">Saldo consolidado</span>
                 </div>
 
-                <strong className="block text-5xl font-semibold">148.700</strong>
+                <strong className="block text-5xl font-semibold">
+                  148.700
+                </strong>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   Estimativa total consolidada considerando programas, cartões e
                   projeção de acúmulo recente.
@@ -101,8 +106,12 @@ function MilesPage() {
                       className="rounded-[24px] border border-white/10 bg-white/5 p-4"
                     >
                       <div className="mb-3 flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{item.nome}</span>
-                        <span className="text-sm font-medium">{item.saldo}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {item.nome}
+                        </span>
+                        <span className="text-sm font-medium">
+                          {item.saldo}
+                        </span>
                       </div>
 
                       <div className="h-3 rounded-full bg-white/10">
@@ -120,7 +129,9 @@ function MilesPage() {
                 <article className="glass-card locus-hover-lift p-6">
                   <div className="mb-4 flex items-center gap-3">
                     <TrendingDown className="text-primary" size={18} />
-                    <span className="text-sm font-medium">Estratégia sugerida</span>
+                    <span className="text-sm font-medium">
+                      Estratégia sugerida
+                    </span>
                   </div>
 
                   <h2 className="text-2xl font-semibold">
@@ -128,8 +139,9 @@ function MilesPage() {
                   </h2>
 
                   <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                    Para este cenário, usar milhas agora ainda não supera o valor
-                    da compra em dinheiro. O produto ajuda o usuário a entender isso sem esforço.
+                    Para este cenário, usar milhas agora ainda não supera o
+                    valor da compra em dinheiro. O produto ajuda o usuário a
+                    entender isso sem esforço.
                   </p>
                 </article>
 
@@ -142,7 +154,10 @@ function MilesPage() {
                   <div className="space-y-4">
                     {estrategias.map((item) => (
                       <div key={item} className="flex items-start gap-3">
-                        <CheckCircle2 className="mt-0.5 text-primary" size={18} />
+                        <CheckCircle2
+                          className="mt-0.5 text-primary"
+                          size={18}
+                        />
                         <span className="text-sm leading-7 text-muted-foreground">
                           {item}
                         </span>
@@ -165,11 +180,16 @@ function MilesPage() {
 
           <div className="grid gap-6 md:grid-cols-3">
             {comparativos.map((item) => (
-              <article key={item.label} className="glass-card locus-hover-lift p-6">
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              <article
+                key={item.label}
+                className="glass-card locus-hover-lift p-6"
+              >
+                <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">
                   {item.label}
                 </p>
-                <strong className="mt-2 block text-2xl font-semibold">{item.value}</strong>
+                <strong className="mt-2 block text-2xl font-semibold">
+                  {item.value}
+                </strong>
               </article>
             ))}
           </div>
@@ -182,11 +202,12 @@ function MilesPage() {
                   Inteligência financeira aplicada à viagem
                 </div>
                 <h3 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                  Esta página deixa claro que o Locus não fala só de destino: ele fala de decisão.
+                  Esta página deixa claro que o Locus não fala só de destino:
+                  ele fala de decisão.
                 </h3>
                 <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
-                  O valor aqui está em traduzir estratégia de cartão, pontos e emissão
-                  para algo visual, bonito e rápido de entender.
+                  O valor aqui está em traduzir estratégia de cartão, pontos e
+                  emissão para algo visual, bonito e rápido de entender.
                 </p>
               </div>
 

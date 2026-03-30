@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import {
   ArrowRight,
   BellRing,
@@ -55,12 +55,12 @@ function RadarPage() {
       <main className="overflow-hidden">
         <section className="relative">
           <div className="pointer-events-none absolute inset-0">
-            <div className="hero-orb left-[-120px] top-[80px]" />
-            <div className="hero-orb-secondary right-[-180px] top-[30px]" />
+            <div className="hero-orb top-[80px] left-[-120px]" />
+            <div className="hero-orb-secondary top-[30px] right-[-180px]" />
             <div className="grid-pattern absolute inset-0 opacity-35" />
           </div>
 
-          <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-16 md:pb-20 md:pt-20">
+          <div className="relative mx-auto max-w-7xl px-6 pt-16 pb-16 md:pt-20 md:pb-20">
             <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="section-badge premium-ring mb-4">
@@ -70,7 +70,9 @@ function RadarPage() {
 
                 <h1 className="max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl xl:text-6xl">
                   Saiba quando esperar,
-                  <span className="gradient-text block">quando comprar e quando agir.</span>
+                  <span className="gradient-text block">
+                    quando comprar e quando agir.
+                  </span>
                 </h1>
 
                 <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">
@@ -115,12 +117,17 @@ function RadarPage() {
 
                   <div className="flex h-60 items-end gap-3">
                     {barras.map((item) => (
-                      <div key={item.dia} className="flex flex-1 flex-col items-center gap-2">
+                      <div
+                        key={item.dia}
+                        className="flex flex-1 flex-col items-center gap-2"
+                      >
                         <div
                           className="w-full rounded-t-2xl bg-gradient-to-t from-primary/35 via-primary/70 to-cyan-300"
                           style={{ height: `${item.valor}%` }}
                         />
-                        <span className="text-xs text-muted-foreground">{item.dia}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {item.dia}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -130,7 +137,9 @@ function RadarPage() {
               <section className="glass-card p-8">
                 <div className="mb-4 flex items-center gap-3">
                   <BellRing className="text-primary" size={18} />
-                  <span className="text-sm font-medium">Alertas relevantes</span>
+                  <span className="text-sm font-medium">
+                    Alertas relevantes
+                  </span>
                 </div>
 
                 <div className="space-y-4">
@@ -139,7 +148,9 @@ function RadarPage() {
                       key={alerta}
                       className="rounded-[24px] border border-white/10 bg-white/5 p-4"
                     >
-                      <p className="text-sm leading-7 text-muted-foreground">{alerta}</p>
+                      <p className="text-sm leading-7 text-muted-foreground">
+                        {alerta}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -158,7 +169,10 @@ function RadarPage() {
 
           <div className="grid gap-6 md:grid-cols-3">
             {insights.map((item) => (
-              <article key={item.titulo} className="glass-card locus-hover-lift p-6">
+              <article
+                key={item.titulo}
+                className="glass-card locus-hover-lift p-6"
+              >
                 <div className="mb-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted-foreground">
                   <CalendarDays size={14} className="mr-2" />
                   {item.titulo}
@@ -183,7 +197,8 @@ function RadarPage() {
                 </h3>
                 <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
                   A força desta tela é dizer ao usuário o que fazer sem ele
-                  precisar interpretar gráfico complexo. É visual, útil e muito mais convincente.
+                  precisar interpretar gráfico complexo. É visual, útil e muito
+                  mais convincente.
                 </p>
               </div>
 

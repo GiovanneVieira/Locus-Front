@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import {
   ArrowRight,
   Compass,
@@ -27,7 +27,8 @@ const destinos = [
     subtitulo: "tecnologia, cultura e ritmo urbano",
     periodo: "Março a maio",
     faixa: "R$ 4.290",
-    destaque: "Combina inovação, tradição e alto impacto visual para o produto.",
+    destaque:
+      "Combina inovação, tradição e alto impacto visual para o produto.",
     gradiente:
       "bg-[linear-gradient(145deg,rgba(34,197,255,.62),rgba(99,102,241,.34),rgba(255,255,255,.02))]",
   },
@@ -36,7 +37,8 @@ const destinos = [
     subtitulo: "história viva e gastronomia memorável",
     periodo: "Maio a setembro",
     faixa: "R$ 3.460",
-    destaque: "Excelente para roteiros culturais e sensação de viagem clássica.",
+    destaque:
+      "Excelente para roteiros culturais e sensação de viagem clássica.",
     gradiente:
       "bg-[linear-gradient(145deg,rgba(255,132,84,.62),rgba(124,58,237,.24),rgba(255,255,255,.02))]",
   },
@@ -45,7 +47,8 @@ const destinos = [
     subtitulo: "neve, inverno premium e fuga rápida",
     periodo: "Junho a agosto",
     faixa: "R$ 2.140",
-    destaque: "Ótimo destino para experiência sazonal e compra orientada por época.",
+    destaque:
+      "Ótimo destino para experiência sazonal e compra orientada por época.",
     gradiente:
       "bg-[linear-gradient(145deg,rgba(56,189,248,.55),rgba(168,85,247,.24),rgba(255,255,255,.02))]",
   },
@@ -54,7 +57,8 @@ const destinos = [
     subtitulo: "charme urbano e custo mais equilibrado",
     periodo: "Abril a outubro",
     faixa: "R$ 3.020",
-    destaque: "Boa porta de entrada para viagem internacional com ótimo aproveitamento.",
+    destaque:
+      "Boa porta de entrada para viagem internacional com ótimo aproveitamento.",
     gradiente:
       "bg-[linear-gradient(145deg,rgba(16,185,129,.55),rgba(59,130,246,.24),rgba(255,255,255,.02))]",
   },
@@ -63,7 +67,8 @@ const destinos = [
     subtitulo: "vinhos, montanhas e decisão rápida",
     periodo: "Março a maio",
     faixa: "R$ 1.980",
-    destaque: "Rota forte para o radar de preços e viagens de custo mais acessível.",
+    destaque:
+      "Rota forte para o radar de preços e viagens de custo mais acessível.",
     gradiente:
       "bg-[linear-gradient(145deg,rgba(244,114,182,.52),rgba(99,102,241,.24),rgba(255,255,255,.02))]",
   },
@@ -83,12 +88,12 @@ function Destinations() {
       <main className="overflow-hidden">
         <section className="relative">
           <div className="pointer-events-none absolute inset-0">
-            <div className="hero-orb left-[-120px] top-[60px]" />
-            <div className="hero-orb-secondary right-[-180px] top-[20px]" />
+            <div className="hero-orb top-[60px] left-[-120px]" />
+            <div className="hero-orb-secondary top-[20px] right-[-180px]" />
             <div className="grid-pattern absolute inset-0 opacity-35" />
           </div>
 
-          <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-16 md:pb-20 md:pt-20">
+          <div className="relative mx-auto max-w-7xl px-6 pt-16 pb-16 md:pt-20 md:pb-20">
             <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="section-badge premium-ring mb-4">
@@ -98,7 +103,9 @@ function Destinations() {
 
                 <h1 className="max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl xl:text-6xl">
                   Destinos pensados para
-                  <span className="gradient-text block">inspirar, sentir e decidir.</span>
+                  <span className="gradient-text block">
+                    inspirar, sentir e decidir.
+                  </span>
                 </h1>
 
                 <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">
@@ -132,7 +139,9 @@ function Destinations() {
                   <div className="mb-2 inline-flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
                     <Sparkles size={18} className="text-primary" />
                   </div>
-                  <p className="text-sm leading-7 text-muted-foreground">{item}</p>
+                  <p className="text-sm leading-7 text-muted-foreground">
+                    {item}
+                  </p>
                 </div>
               ))}
             </div>
@@ -165,14 +174,20 @@ function Destinations() {
                     </div>
 
                     <div>
-                      <h2 className="text-3xl font-semibold text-white">{item.nome}</h2>
-                      <p className="mt-2 text-sm text-white/80">{item.subtitulo}</p>
+                      <h2 className="text-3xl font-semibold text-white">
+                        {item.nome}
+                      </h2>
+                      <p className="mt-2 text-sm text-white/80">
+                        {item.subtitulo}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-5">
-                  <p className="text-sm leading-7 text-muted-foreground">{item.destaque}</p>
+                  <p className="text-sm leading-7 text-muted-foreground">
+                    {item.destaque}
+                  </p>
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
@@ -201,12 +216,14 @@ function Destinations() {
                   Próximo nível do produto
                 </div>
                 <h3 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                  Esta página já está pronta para receber mapas, fotos reais e visualização imersiva.
+                  Esta página já está pronta para receber mapas, fotos reais e
+                  visualização imersiva.
                 </h3>
                 <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
                   A base visual está forte. O próximo salto é integrar dados
                   reais de destino, pontos turísticos, clima e módulos
-                  interativos para transformar isso em uma experiência ainda mais memorável.
+                  interativos para transformar isso em uma experiência ainda
+                  mais memorável.
                 </p>
               </div>
 

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import {
   ArrowRight,
   CalendarDays,
@@ -56,12 +56,12 @@ function PlanningPage() {
       <main className="overflow-hidden">
         <section className="relative">
           <div className="pointer-events-none absolute inset-0">
-            <div className="hero-orb left-[-120px] top-[80px]" />
-            <div className="hero-orb-secondary right-[-180px] top-[20px]" />
+            <div className="hero-orb top-[80px] left-[-120px]" />
+            <div className="hero-orb-secondary top-[20px] right-[-180px]" />
             <div className="grid-pattern absolute inset-0 opacity-35" />
           </div>
 
-          <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-16 md:pb-20 md:pt-20">
+          <div className="relative mx-auto max-w-7xl px-6 pt-16 pb-16 md:pt-20 md:pb-20">
             <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="section-badge premium-ring mb-4">
@@ -71,18 +71,24 @@ function PlanningPage() {
 
                 <h1 className="max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl xl:text-6xl">
                   Uma viagem bem planejada
-                  <span className="gradient-text block">começa antes do embarque.</span>
+                  <span className="gradient-text block">
+                    começa antes do embarque.
+                  </span>
                 </h1>
 
                 <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">
                   Esta tela mostra que o Locus não para na compra. Ele continua
-                  ajudando o usuário a distribuir os dias, organizar o ritmo e tornar a experiência melhor.
+                  ajudando o usuário a distribuir os dias, organizar o ritmo e
+                  tornar a experiência melhor.
                 </p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
                 <Button asChild className="rounded-full px-6">
-                  <Link to="/destinos" className="inline-flex items-center gap-2">
+                  <Link
+                    to="/destinos"
+                    className="inline-flex items-center gap-2"
+                  >
                     Ver destinos
                     <ArrowRight size={16} />
                   </Link>
@@ -104,7 +110,9 @@ function PlanningPage() {
                   <div className="mb-2 inline-flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
                     <Sparkles size={18} className="text-primary" />
                   </div>
-                  <p className="text-sm leading-7 text-muted-foreground">{item}</p>
+                  <p className="text-sm leading-7 text-muted-foreground">
+                    {item}
+                  </p>
                 </div>
               ))}
             </div>
@@ -176,8 +184,7 @@ function PlanningPage() {
             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
                 <div className="section-badge mb-4">
-                  <Route size={16} />
-                  O valor do planejamento visual
+                  <Route size={16} />O valor do planejamento visual
                 </div>
                 <h3 className="text-3xl font-semibold tracking-tight md:text-4xl">
                   Esta página fecha a proposta do produto com utilidade real.
@@ -185,7 +192,8 @@ function PlanningPage() {
                 <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
                   Quando o usuário consegue visualizar como os dias serão
                   distribuídos, a viagem deixa de ser abstrata e ganha forma.
-                  Isso aumenta confiança, percepção de valor e desejo de usar a plataforma.
+                  Isso aumenta confiança, percepção de valor e desejo de usar a
+                  plataforma.
                 </p>
               </div>
 
