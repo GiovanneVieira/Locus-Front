@@ -1,13 +1,6 @@
 import { useMemo, useState } from "react"
-import { Link, NavLink, useLocation } from "react-router-dom"
-import {
-  ArrowRight,
-  Menu,
-  Moon,
-  Sparkles,
-  Sun,
-  X,
-} from "lucide-react"
+import { Link, NavLink, useLocation } from "react-router"
+import { ArrowRight, Menu, Moon, Sparkles, Sun, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
@@ -41,7 +34,7 @@ function Header() {
 
   return (
     <>
-      <header className="header-glow-line sticky top-0 z-50 w-full"> 
+      <header className="header-glow-line sticky top-0 z-50 w-full">
         <div className="border-b border-white/10 bg-background/55 backdrop-blur-2xl">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
             <Link
@@ -151,7 +144,7 @@ function Header() {
               <div className="mb-5 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    <p className="text-xs tracking-[0.16em] text-muted-foreground uppercase">
                       Navegação
                     </p>
                     <h2 className="mt-1 text-lg font-semibold text-foreground">
