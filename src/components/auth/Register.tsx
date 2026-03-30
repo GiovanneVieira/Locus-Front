@@ -7,6 +7,7 @@ import { Separator } from "../ui/separator"
 import GoogleLogo from "@/assets/google-logo.svg"
 
 const Register = () => {
+  
   const [showPassword, setShowPassword] = useState(false)
   
   const form = useForm({

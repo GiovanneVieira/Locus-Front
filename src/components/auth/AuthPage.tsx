@@ -36,7 +36,7 @@ const AuthPage = () => {
                             {currentCard === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            {currentCard === 'login' ? 'Acesse sua inteligência de viagem' : 'Comece sua jornada premium no Locus'}
+                            {currentCard === 'login' ? 'Acesse sua inteligência de viagem' : 'Comece sua jornada no Locus'}
                         </p>
                     </div>
 
