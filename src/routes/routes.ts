@@ -1,11 +1,12 @@
 import { createBrowserRouter } from "react-router"
 
+import AuthPage from "@/components/auth/AuthPage"
+import DashboardPage from "@/pages/Dashboard"
 import Destinations from "@/pages/Destinations"
 import Home from "@/pages/Home"
 import MilesPage from "@/pages/Miles"
 import PlanningPage from "@/pages/Planning"
 import RadarPage from "@/pages/Radar"
-import AuthPage from "@/components/auth/AuthPage"
 
 export const router = createBrowserRouter([
   {
@@ -29,11 +30,15 @@ export const router = createBrowserRouter([
     Component: PlanningPage,
   },
   {
+    path: "/dashboard",
+    Component: DashboardPage,
+  },
+  {
     path: ":context/auth",
-    Component: AuthPage
+    Component: AuthPage,
   },
   {
     path: "/auth",
-    Component: AuthPage
-  }
+    Component: AuthPage,
+  },
 ])

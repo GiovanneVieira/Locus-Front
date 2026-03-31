@@ -1,28 +1,31 @@
-interface navItem{
-    nome: string,
-    rota: string
+interface NavItem {
+  nome: string
+  rota: string
 }
 
-
-export const navegacao: navItem[] = [
-    {
-        nome: "Início",
-        rota: "/"
-    },
-    {
-        nome: "Destinos",
-        rota: "/destinos"
-    },
-    {
-        nome: "Radar",
-        rota: "/radar"
-    },
-    {
-        nome: "Milhas",
-        rota: "/milhas"
-    },
-    {
-        nome: "Planejamento",
-        rota: "/planejamento"
-    },
+export const navegacao: NavItem[] = [
+  {
+    nome: "Início",
+    rota: "/",
+  },
+  {
+    nome: "Destinos",
+    rota: "/destinos",
+  },
+  {
+    nome: "Radar",
+    rota: "/radar",
+  },
+  {
+    nome: "Milhas",
+    rota: "/milhas",
+  },
+  {
+    nome: "Planejamento",
+    rota: "/planejamento",
+  },
+  {
+    nome: "Dashboard",
+    rota: "/dashboard",
+  },
 ]

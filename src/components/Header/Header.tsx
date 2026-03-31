@@ -1,26 +1,19 @@
 import { useMemo, useState } from "react"
 import { Link, NavLink, useLocation } from "react-router"
-import { ArrowRight, Menu, Moon, Sparkles, Sun, X } from "lucide-react"
+import { ArrowRight, Menu, Moon, Sun, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog" // Import do shadcn
-import Logo from "../LocusLogo"
-import AuthPage from "../auth/AuthPage"
-import { NavItems } from "../NavItems"
-
-const navegacao = [
-  { nome: "Início", rota: "/" },
-  { nome: "Destinos", rota: "/destinos" },
-  { nome: "Radar", rota: "/radar" },
-  { nome: "Milhas", rota: "/milhas" },
-  { nome: "Planejamento", rota: "/planejamento" },
-]
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { navegacao } from "@/constants/constants"
+import Logo from "@/components/LocusLogo"
+import AuthPage from "@/components/auth/AuthPage"
+import { NavItems } from "@/components/NavItems"
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
   const [menuAberto, setMenuAberto] = useState(false)
-  const [authAberto, setAuthAberto] = useState(false) // Estado local para o modal de login
+  const [authAberto, setAuthAberto] = useState(false)
   const location = useLocation()
 
   const paginaAtual = useMemo(() => {
@@ -33,8 +26,6 @@ export default function Header() {
   return (
     <header className="header-glow-line sticky top-0 z-50 w-full border-b border-white/10 bg-background/55 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        
-        {/* Branding/Logo */}
         <Link to="/" className="group flex min-w-0 items-center gap-3">
           <div className="relative">
             <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -44,90 +35,94 @@ export default function Header() {
           </div>
           <div className="min-w-0 leading-tight">
             <strong className="block truncate text-base font-semibold text-foreground md:text-lg">Locus</strong>
-            <span className="block truncate text-xs text-muted-foreground md:text-sm">travel intelligence</span>
+            <span className="block truncate text-xs text-muted-foreground md:text-sm">{paginaAtual.toLowerCase()}</span>
           </div>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden items-center gap-2 lg:flex">
           {navegacao.map((item) => (
             <NavLink
               key={item.rota}
               to={item.rota}
-              className={({ isActive }) => [
-                "relative rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300",
-                isActive ? "border border-white/10 bg-white/10 text-foreground" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-              ].join(" ")}
+              className={({ isActive }) =>
+                [
+                  "relative rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300",
+                  isActive
+                    ? "border border-white/10 bg-white/10 text-foreground"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                ].join(" ")
+              }
             >
               {item.nome}
             </NavLink>
           ))}
         </nav>
 
-        {/* Actions */}
         <div className="hidden items-center gap-2 lg:flex">
           <button
             type="button"
             onClick={alternarTema}
             className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition-all hover:bg-white/10"
+            aria-label="Alternar tema"
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* ESTRUTURA DO DIALOG (MODAL) */}
           <Dialog open={authAberto} onOpenChange={setAuthAberto}>
             <DialogTrigger asChild>
               <Button variant="outline" className="rounded-full border-white/15 bg-white/5 px-5 text-foreground hover:bg-white/10">
                 Entrar
               </Button>
             </DialogTrigger>
-            <DialogContent className="border-white/10 p-0 bg-transparent shadow-none overflow-hidden sm:rounded-2xl h-[95%] ">
+            <DialogContent className="h-[95%] overflow-hidden border-white/10 bg-transparent p-0 shadow-none sm:rounded-2xl">
               <DialogTitle className="sr-only">Autenticação</DialogTitle>
-              {/* O AuthPage renderiza o conteúdo do Login/Cadastro */}
-              <AuthPage /> 
+              <AuthPage />
             </DialogContent>
           </Dialog>
 
           <Button asChild className="rounded-full px-5 shadow-lg">
-            <Link to="/destinos" className="inline-flex items-center gap-2">
-              Explorar <ArrowRight size={16} />
+            <Link to="/dashboard" className="inline-flex items-center gap-2">
+              Abrir dashboard <ArrowRight size={16} />
             </Link>
           </Button>
         </div>
 
-        {/* Menu Mobile Button */}
         <div className="flex items-center gap-2 lg:hidden">
           <button
             onClick={() => setMenuAberto(!menuAberto)}
-            className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/5 cursor-pointer"
+            className="inline-flex size-11 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/5"
+            aria-label="Abrir menu"
           >
             {menuAberto ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
-      
-      {/* MOBILE MENU OVERLAY */}
-      <div className={`overflow-hidden border-t border-white/10 bg-background/80 backdrop-blur-2xl transition-all duration-300 lg:hidden ${
-        menuAberto ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-      }`}>
+
+      <div
+        className={`overflow-hidden border-t border-white/10 bg-background/80 backdrop-blur-2xl transition-all duration-300 lg:hidden ${
+          menuAberto ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
         <div className="mx-auto max-w-7xl px-6 py-5">
           <div className="mb-5 rounded-3xl border border-white/10 bg-white/5 p-4">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-xs tracking-widest text-muted-foreground uppercase font-bold">Navegação</span>
-              <div className="rounded-full bg-primary/10 px-3 py-1 text-[10px] text-primary font-bold">LOCUS v1.0</div>
+              <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">Navegação</span>
+              <div className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary">LOCUS v1.0</div>
             </div>
-            
+
             <div className="grid gap-2">
               <NavItems onClick={() => setMenuAberto(false)} />
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Button asChild variant="outline" className="rounded-full border-white/15">
-                <Link to={'/auth'} onClick={() => setMenuAberto(false)}>Entrar na conta</Link>
+                <Link to="/auth" onClick={() => setMenuAberto(false)}>
+                  Entrar na conta
+                </Link>
               </Button>
               <Button asChild className="rounded-full">
-                <Link to="/destinos" onClick={() => setMenuAberto(false)} className="flex items-center gap-2">
-                  Explorar Agora <ArrowRight size={16} />
+                <Link to="/dashboard" onClick={() => setMenuAberto(false)} className="flex items-center gap-2">
+                  Abrir dashboard <ArrowRight size={16} />
                 </Link>
               </Button>
             </div>
@@ -137,15 +132,3 @@ export default function Header() {
     </header>
   )
 }
-
-// Sub-componente interno para o Toggle de Tema
-const ThemeToggleButton = ({ theme, onClick }: { theme: string; onClick: () => void }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground transition-all duration-300 hover:border-white/20 hover:bg-white/10 hover:text-foreground"
-    aria-label="Alternar tema"
-  >
-    {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-  </button>
-)
