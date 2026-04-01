@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate } from "react-router"
 import {
   CheckCircle2,
@@ -15,23 +15,14 @@ import {
 import Header from "@/components/Header/Header"
 import { Footer } from "@/components/Footer"
 import { Button } from "@/components/ui/button"
-import {
-  ApiError,
-  createTask,
-  deleteTask,
-  fetchBoard,
-  fetchCurrentUser,
-  logout,
-  updateTask,
-} from "@/lib/api"
+import { useLogout, useCurrentUser } from "@/hooks/useAuth"
+import { useBoard, useCreateTask, useDeleteTask, useUpdateTask } from "@/hooks/useBoard"
+import { ApiError } from "@/lib/api"
 import type {
-  Board,
   BoardColumn,
   BoardTask,
   CreateTaskPayload,
-  TaskColumnCode,
   TaskPriority,
-  UserSession,
 } from "@/lib/types"
 
 const priorityLabel: Record<TaskPriority, string> = {
@@ -40,220 +31,80 @@ const priorityLabel: Record<TaskPriority, string> = {
   LOW: "Baixa",
 }
 
-const columnTone: Record<TaskColumnCode, string> = {
+const priorityTone: Record<TaskPriority, string> = {
+  HIGH: "border-red-500/20 bg-red-500/10 text-red-300",
+  MEDIUM: "border-amber-500/20 bg-amber-500/10 text-amber-300",
+  LOW: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
+}
+
+const columnTone = {
   TODO: "border-white/10 bg-white/5",
   IN_PROGRESS: "border-primary/20 bg-primary/8",
   DONE: "border-emerald-500/20 bg-emerald-500/8",
-}
+} as const
 
-const defaultTasks = [
-  {
-    id: "scrum-82",
-    jiraCode: "SCRUM-82",
-    title: "Definição do modelo ER",
-    description: "Relacionar entidades, chaves e vínculos necessários para autenticação e acompanhamento da sprint.",
-    priority: "HIGH" as const,
-    position: 1,
-    storyPoints: 3,
-    assignee: "Arquitetura",
-    columnCode: "TODO" as const,
-  },
-  {
-    id: "scrum-83",
-    jiraCode: "SCRUM-83",
-    title: "Diagrama de Classes",
-    description: "Detalhar domínio, serviços, controladores e fluxo principal da entrega.",
-    priority: "MEDIUM" as const,
-    position: 2,
-    storyPoints: 2,
-    assignee: "Arquitetura",
-    columnCode: "TODO" as const,
-  },
-  {
-    id: "scrum-81",
-    jiraCode: "SCRUM-81",
-    title: "Implementar telas prototipadas",
-    description: "Transformar o mockup em uma tela funcional para o dashboard da sprint.",
-    priority: "HIGH" as const,
-    position: 1,
-    storyPoints: 5,
-    assignee: "Front-End",
-    columnCode: "IN_PROGRESS" as const,
-  },
-  {
-    id: "scrum-84",
-    jiraCode: "SCRUM-84",
-    title: "Incluir Front-End",
-    description: "Conectar login, cadastro, navegação e consumo das informações do quadro.",
-    priority: "HIGH" as const,
-    position: 2,
-    storyPoints: 5,
-    assignee: "Front-End",
-    columnCode: "IN_PROGRESS" as const,
-  },
-  {
-    id: "scrum-85",
-    jiraCode: "SCRUM-85",
-    title: "Incluir Back-End",
-    description: "Disponibilizar endpoints para board, tarefas e leitura do usuário autenticado.",
-    priority: "HIGH" as const,
-    position: 3,
-    storyPoints: 5,
-    assignee: "Back-End",
-    columnCode: "IN_PROGRESS" as const,
-  },
-  {
-    id: "scrum-69",
-    jiraCode: "SCRUM-69",
-    title: "Prototipação de telas e escolha do esquema de cores",
-    description: "Consolidar o look & feel que serviu de base para a implementação final.",
-    priority: "MEDIUM" as const,
-    position: 1,
-    storyPoints: 2,
-    assignee: "Design",
-    columnCode: "DONE" as const,
-  },
-]
-
-function buildFallbackBoard(): Board {
-  const columns: BoardColumn[] = [
-    { id: "column-todo", title: "Planejado", code: "TODO", position: 1, tasks: [] },
-    { id: "column-progress", title: "Em andamento", code: "IN_PROGRESS", position: 2, tasks: [] },
-    { id: "column-done", title: "Concluído", code: "DONE", position: 3, tasks: [] },
-  ]
-
-  const columnByCode = new Map(columns.map((column) => [column.code, column]))
-
-  defaultTasks.forEach((task) => {
-    const column = columnByCode.get(task.columnCode)
-    if (!column) return
-
-    column.tasks.push({
-      id: task.id,
-      jiraCode: task.jiraCode,
-      title: task.title,
-      description: task.description,
-      priority: task.priority,
-      position: task.position,
-      storyPoints: task.storyPoints,
-      assignee: task.assignee,
-      columnId: column.id,
-      columnCode: column.code,
-    })
-  })
-
-  return {
-    id: "fallback-board",
-    name: "Sprint atual - Implementação",
-    description: "Modo local com base no quadro do Jira enviado.",
-    columns,
-  }
-}
-
-function normalizeBoard(board: Board): Board {
-  return {
-    ...board,
-    columns: [...board.columns]
-      .sort((left, right) => left.position - right.position)
-      .map((column) => ({
-        ...column,
-        tasks: [...column.tasks].sort((left, right) => left.position - right.position),
-      })),
-  }
-}
-
-function replaceTaskInBoard(board: Board, nextTask: BoardTask): Board {
-  const nextColumns = board.columns.map((column) => {
-    const filteredTasks = column.tasks.filter((task) => task.id !== nextTask.id)
-    if (column.id !== nextTask.columnId) {
-      return { ...column, tasks: filteredTasks }
-    }
-
-    const mergedTasks = [...filteredTasks, nextTask].sort((left, right) => left.position - right.position)
-    return { ...column, tasks: mergedTasks }
-  })
-
-  return normalizeBoard({ ...board, columns: nextColumns })
-}
-
-function removeTaskFromBoard(board: Board, taskId: string): Board {
-  return normalizeBoard({
-    ...board,
-    columns: board.columns.map((column) => ({
-      ...column,
-      tasks: column.tasks.filter((task) => task.id !== taskId),
-    })),
-  })
+const defaultForm = {
+  jiraCode: "",
+  title: "",
+  description: "",
+  priority: "MEDIUM" as TaskPriority,
+  columnId: "",
+  storyPoints: "3",
+  assignee: "",
 }
 
 function getNextPosition(column: BoardColumn) {
   return Math.max(0, ...column.tasks.map((task) => task.position)) + 1
 }
 
+function MetricCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  rotateIcon = false,
+}: {
+  icon: typeof ClipboardList
+  label: string
+  value: string
+  detail: string
+  rotateIcon?: boolean
+}) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
+          <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-background/70 p-3">
+          <Icon className={rotateIcon ? "animate-spin-slow" : ""} size={22} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const [board, setBoard] = useState<Board | null>(null)
-  const [currentUser, setCurrentUser] = useState<UserSession | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-  const [mode, setMode] = useState<"api" | "local">("api")
+  const { data: currentUser, isLoading: loadingUser } = useCurrentUser()
+  const { data: board, isLoading: loadingBoard, error: boardError } = useBoard()
+  const createTaskMutation = useCreateTask()
+  const updateTaskMutation = useUpdateTask()
+  const deleteTaskMutation = useDeleteTask()
+  const logoutMutation = useLogout()
+
   const [showNewTask, setShowNewTask] = useState(false)
-  const [formData, setFormData] = useState({
-    jiraCode: "",
-    title: "",
-    description: "",
-    priority: "MEDIUM" as TaskPriority,
-    columnId: "",
-    storyPoints: "3",
-    assignee: "",
-  })
+  const [message, setMessage] = useState<string | null>(null)
+  const [formData, setFormData] = useState(defaultForm)
 
-  useEffect(() => {
-    let active = true
-
-    async function loadDashboard() {
-      try {
-        const [userResult, boardResult] = await Promise.allSettled([fetchCurrentUser(), fetchBoard()])
-
-        if (!active) return
-
-        if (userResult.status === "fulfilled") {
-          setCurrentUser(userResult.value)
-        }
-
-        if (boardResult.status === "fulfilled") {
-          const normalizedBoard = normalizeBoard(boardResult.value)
-          setBoard(normalizedBoard)
-          setFormData((currentForm) => ({
-            ...currentForm,
-            columnId: currentForm.columnId || normalizedBoard.columns[0]?.id || "",
-          }))
-          setMode("api")
-          setMessage(userResult.status === "fulfilled" ? null : "Quadro carregado, mas sem sessão autenticada no momento.")
-        } else {
-          const localBoard = buildFallbackBoard()
-          setBoard(localBoard)
-          setFormData((currentForm) => ({
-            ...currentForm,
-            columnId: currentForm.columnId || localBoard.columns[0]?.id || "",
-          }))
-          setMode("local")
-          setMessage("API indisponível ou protegida. O dashboard entrou em modo local para você continuar evoluindo a tela.")
-        }
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadDashboard()
-
-    return () => {
-      active = false
-    }
-  }, [])
+  const loading = loadingUser || loadingBoard
+  const saving =
+    createTaskMutation.isPending ||
+    updateTaskMutation.isPending ||
+    deleteTaskMutation.isPending ||
+    logoutMutation.isPending
 
   const totals = useMemo(() => {
     if (!board) {
@@ -263,28 +114,29 @@ export default function DashboardPage() {
     const allTasks = board.columns.flatMap((column) => column.tasks)
     const done = board.columns.find((column) => column.code === "DONE")?.tasks.length ?? 0
     const inProgress = board.columns.find((column) => column.code === "IN_PROGRESS")?.tasks.length ?? 0
-    const total = allTasks.length
+    const completion = allTasks.length > 0 ? Math.round((done / allTasks.length) * 100) : 0
 
     return {
-      total,
+      total: allTasks.length,
       done,
       inProgress,
-      completion: total === 0 ? 0 : Math.round((done / total) * 100),
+      completion,
     }
   }, [board])
 
   async function handleLogout() {
     try {
-      await logout()
-    } catch {
-      // Mantém navegação mesmo se a API não estiver disponível.
-    } finally {
-      navigate("/")
+      setMessage(null)
+      await logoutMutation.mutateAsync()
+      navigate("/auth")
+    } catch (error) {
+      const nextMessage = error instanceof ApiError ? error.message : "Não foi possível encerrar a sessão agora."
+      setMessage(nextMessage)
     }
   }
 
   async function handleCreateTask() {
-    if (!board || !formData.title.trim() || !formData.jiraCode.trim() || saving) {
+    if (!board) {
       return
     }
 
@@ -299,54 +151,25 @@ export default function DashboardPage() {
       description: formData.description.trim(),
       priority: formData.priority,
       columnId: selectedColumn.id,
+      position: getNextPosition(selectedColumn),
       storyPoints: Number.isNaN(Number(formData.storyPoints)) ? null : Number(formData.storyPoints),
-      assignee: formData.assignee.trim(),
+      assignee: formData.assignee.trim() || undefined,
     }
 
-    setSaving(true)
-    setMessage(null)
-
     try {
-      if (mode === "api") {
-        const task = await createTask(payload)
-        setBoard((currentBoard) => (currentBoard ? replaceTaskInBoard(currentBoard, task) : currentBoard))
-      } else {
-        const localTask: BoardTask = {
-          id: crypto.randomUUID(),
-          jiraCode: payload.jiraCode,
-          title: payload.title,
-          description: payload.description,
-          priority: payload.priority,
-          position: getNextPosition(selectedColumn),
-          storyPoints: payload.storyPoints ?? null,
-          assignee: payload.assignee || null,
-          columnId: selectedColumn.id,
-          columnCode: selectedColumn.code,
-        }
-        setBoard((currentBoard) => (currentBoard ? replaceTaskInBoard(currentBoard, localTask) : currentBoard))
-      }
-
-      setFormData((currentForm) => ({
-        ...currentForm,
-        jiraCode: "",
-        title: "",
-        description: "",
-        priority: "MEDIUM",
-        storyPoints: "3",
-        assignee: "",
-      }))
+      setMessage(null)
+      await createTaskMutation.mutateAsync(payload)
+      setFormData({ ...defaultForm, columnId: board.columns[0]?.id ?? "" })
       setShowNewTask(false)
       setMessage("Task adicionada com sucesso.")
     } catch (error) {
       const nextMessage = error instanceof ApiError ? error.message : "Não foi possível criar a task agora."
       setMessage(nextMessage)
-    } finally {
-      setSaving(false)
     }
   }
 
   async function handleMoveTask(task: BoardTask, targetColumnId: string) {
-    if (!board || saving || task.columnId === targetColumnId) {
+    if (!board || task.columnId === targetColumnId) {
       return
     }
 
@@ -355,53 +178,64 @@ export default function DashboardPage() {
       return
     }
 
-    const optimisticTask: BoardTask = {
-      ...task,
-      columnId: targetColumn.id,
-      columnCode: targetColumn.code,
-      position: getNextPosition(targetColumn),
-    }
-
-    setSaving(true)
-    setMessage(null)
-
     try {
-      if (mode === "api") {
-        const updatedTask = await updateTask(task.id, {
+      setMessage(null)
+      await updateTaskMutation.mutateAsync({
+        taskId: task.id,
+        payload: {
           columnId: targetColumn.id,
-          position: optimisticTask.position,
-        })
-        setBoard((currentBoard) => (currentBoard ? replaceTaskInBoard(currentBoard, updatedTask) : currentBoard))
-      } else {
-        setBoard((currentBoard) => (currentBoard ? replaceTaskInBoard(currentBoard, optimisticTask) : currentBoard))
-      }
+          position: getNextPosition(targetColumn),
+        },
+      })
     } catch (error) {
       const nextMessage = error instanceof ApiError ? error.message : "Não foi possível mover a task agora."
       setMessage(nextMessage)
-    } finally {
-      setSaving(false)
     }
   }
 
   async function handleDeleteTask(taskId: string) {
-    if (!board || saving) {
-      return
-    }
-
-    setSaving(true)
-    setMessage(null)
-
     try {
-      if (mode === "api") {
-        await deleteTask(taskId)
-      }
-      setBoard((currentBoard) => (currentBoard ? removeTaskFromBoard(currentBoard, taskId) : currentBoard))
+      setMessage(null)
+      await deleteTaskMutation.mutateAsync(taskId)
+      setMessage("Task removida com sucesso.")
     } catch (error) {
       const nextMessage = error instanceof ApiError ? error.message : "Não foi possível remover a task agora."
       setMessage(nextMessage)
-    } finally {
-      setSaving(false)
     }
+  }
+
+  const initialColumnId = board?.columns[0]?.id ?? ""
+  const effectiveColumnId = formData.columnId || initialColumnId
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <main className="mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center px-6 py-20">
+          <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-muted-foreground">
+            <LoaderCircle className="animate-spin" size={18} />
+            Carregando dashboard...
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!board) {
+    const nextMessage = boardError instanceof Error ? boardError.message : "Não foi possível carregar o dashboard."
+
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <main className="mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center px-6 py-20">
+          <div className="max-w-xl rounded-3xl border border-red-500/20 bg-red-500/10 p-6 text-sm text-red-200">
+            {nextMessage}
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   return (
@@ -427,16 +261,16 @@ export default function DashboardPage() {
                   Implementação alinhada ao <span className="gradient-text">Jira</span>
                 </h1>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                  Quadro para acompanhar o que faltava na sprint: modelagem, diagramação, telas prototipadas e integração entre front-end e back-end.
+                  Quadro conectado ao back-end, com autenticação, leitura do usuário atual e gestão real de tarefas da sprint.
                 </p>
               </div>
 
-              <div className="glass-card flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-none hover:transform-none lg:min-w-[320px]">
+              <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-5 lg:min-w-[320px]">
                 <div className="flex items-center gap-3">
                   <UserCircle2 className="text-primary" size={22} />
                   <div>
                     <p className="text-sm font-semibold">
-                      {currentUser?.name ?? "Sessão local"}
+                      {currentUser?.name ?? (loadingUser ? "Carregando..." : "Sessão indisponível")}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {currentUser?.email ?? "Sem autenticação ativa"}
@@ -447,14 +281,19 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-background/60 px-3 py-2">
                   <span className="text-xs font-medium text-muted-foreground">Modo de dados</span>
                   <span className="inline-flex items-center gap-2 text-xs font-semibold">
-                    <Signal size={14} className={mode === "api" ? "text-primary" : "text-amber-500"} />
-                    {mode === "api" ? "API conectada" : "Modo local"}
+                    <Signal size={14} className="text-primary" />
+                    API conectada
                   </span>
                 </div>
 
-                <Button variant="outline" className="rounded-full border-white/15 bg-white/5" onClick={handleLogout}>
+                <Button
+                  variant="outline"
+                  className="rounded-full border-white/15 bg-white/5"
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                >
                   <LogOut size={16} className="mr-2" />
-                  Sair
+                  {logoutMutation.isPending ? "Saindo..." : "Sair"}
                 </Button>
               </div>
             </div>
@@ -466,7 +305,7 @@ export default function DashboardPage() {
             ) : null}
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard icon={ClipboardList} label="Tasks mapeadas" value={String(totals.total)} detail="Itens puxados do quadro da sprint" />
+              <MetricCard icon={ClipboardList} label="Tasks mapeadas" value={String(totals.total)} detail="Itens persistidos no quadro" />
               <MetricCard icon={LoaderCircle} label="Em andamento" value={String(totals.inProgress)} detail="Entrega técnica em progresso" rotateIcon />
               <MetricCard icon={CheckCircle2} label="Concluídas" value={String(totals.done)} detail="Cards já encerrados" />
               <MetricCard icon={Workflow} label="Conclusão" value={`${totals.completion}%`} detail="Percentual atual da sprint" />
@@ -478,9 +317,7 @@ export default function DashboardPage() {
           <div className="mb-6 flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Quadro operacional</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {board?.description ?? "Carregando quadro..."}
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{board.description}</p>
             </div>
 
             <Button className="rounded-full" onClick={() => setShowNewTask((current) => !current)}>
@@ -489,7 +326,7 @@ export default function DashboardPage() {
             </Button>
           </div>
 
-          {showNewTask && board ? (
+          {showNewTask ? (
             <div className="mb-8 grid gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 md:grid-cols-2 xl:grid-cols-6">
               <label className="space-y-2 xl:col-span-1">
                 <span className="text-sm font-medium">Código Jira</span>
@@ -500,6 +337,7 @@ export default function DashboardPage() {
                   placeholder="SCRUM-99"
                 />
               </label>
+
               <label className="space-y-2 xl:col-span-2">
                 <span className="text-sm font-medium">Título</span>
                 <input
@@ -509,10 +347,11 @@ export default function DashboardPage() {
                   placeholder="Descreva a entrega"
                 />
               </label>
+
               <label className="space-y-2 xl:col-span-1">
                 <span className="text-sm font-medium">Coluna</span>
                 <select
-                  value={formData.columnId}
+                  value={effectiveColumnId}
                   onChange={(event) => setFormData((current) => ({ ...current, columnId: event.target.value }))}
                   className="w-full rounded-2xl border border-white/10 bg-background/70 px-4 py-3 outline-none transition focus:border-primary/50"
                 >
@@ -523,6 +362,7 @@ export default function DashboardPage() {
                   ))}
                 </select>
               </label>
+
               <label className="space-y-2 xl:col-span-1">
                 <span className="text-sm font-medium">Prioridade</span>
                 <select
@@ -535,25 +375,18 @@ export default function DashboardPage() {
                   <option value="LOW">Baixa</option>
                 </select>
               </label>
+
               <label className="space-y-2 xl:col-span-1">
                 <span className="text-sm font-medium">Story points</span>
                 <input
                   value={formData.storyPoints}
                   onChange={(event) => setFormData((current) => ({ ...current, storyPoints: event.target.value }))}
                   className="w-full rounded-2xl border border-white/10 bg-background/70 px-4 py-3 outline-none transition focus:border-primary/50"
-                  inputMode="numeric"
+                  placeholder="3"
                 />
               </label>
-              <label className="space-y-2 xl:col-span-2">
-                <span className="text-sm font-medium">Descrição</span>
-                <textarea
-                  value={formData.description}
-                  onChange={(event) => setFormData((current) => ({ ...current, description: event.target.value }))}
-                  className="min-h-28 w-full rounded-2xl border border-white/10 bg-background/70 px-4 py-3 outline-none transition focus:border-primary/50"
-                  placeholder="Detalhe o objetivo da task"
-                />
-              </label>
-              <label className="space-y-2 xl:col-span-2">
+
+              <label className="space-y-2 md:col-span-2 xl:col-span-2">
                 <span className="text-sm font-medium">Responsável</span>
                 <input
                   value={formData.assignee}
@@ -562,134 +395,110 @@ export default function DashboardPage() {
                   placeholder="Ex.: Front-End"
                 />
               </label>
-              <div className="flex items-end xl:col-span-2">
-                <Button className="w-full rounded-full" onClick={handleCreateTask} disabled={saving}>
-                  {saving ? "Salvando..." : "Adicionar task"}
+
+              <label className="space-y-2 md:col-span-2 xl:col-span-4">
+                <span className="text-sm font-medium">Descrição</span>
+                <textarea
+                  value={formData.description}
+                  onChange={(event) => setFormData((current) => ({ ...current, description: event.target.value }))}
+                  className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-background/70 px-4 py-3 outline-none transition focus:border-primary/50"
+                  placeholder="Descreva o que precisa ser feito"
+                />
+              </label>
+
+              <div className="md:col-span-2 xl:col-span-6 flex justify-end">
+                <Button
+                  onClick={handleCreateTask}
+                  disabled={saving || !formData.jiraCode.trim() || !formData.title.trim()}
+                >
+                  {createTaskMutation.isPending ? "Salvando..." : "Salvar task"}
                 </Button>
               </div>
             </div>
           ) : null}
 
-          {loading ? (
-            <div className="rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center text-muted-foreground">
-              Carregando quadro...
-            </div>
-          ) : null}
-
-          {!loading && board ? (
-            <div className="grid gap-5 xl:grid-cols-3">
-              {board.columns.map((column) => (
-                <div key={column.id} className={`rounded-3xl border p-5 ${columnTone[column.code]}`}>
-                  <div className="mb-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{column.title}</h3>
-                      <p className="text-sm text-muted-foreground">{column.tasks.length} task(s)</p>
-                    </div>
-                    <span className="rounded-full border border-white/10 bg-background/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                      {column.code}
-                    </span>
-                  </div>
-
-                  <div className="space-y-4">
-                    {column.tasks.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-muted-foreground">
-                        Nenhuma task nesta coluna.
-                      </div>
-                    ) : (
-                      column.tasks.map((task) => (
-                        <article key={task.id} className="rounded-3xl border border-white/10 bg-background/80 p-4 shadow-sm">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <span className="text-xs font-bold tracking-[0.16em] text-primary uppercase">
-                                {task.jiraCode}
-                              </span>
-                              <h4 className="mt-2 text-base font-semibold">{task.title}</h4>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteTask(task.id)}
-                              className="rounded-full border border-white/10 p-2 text-muted-foreground transition hover:text-destructive"
-                              aria-label={`Remover ${task.title}`}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-
-                          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                            {task.description || "Sem descrição adicional."}
-                          </p>
-
-                          <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold">
-                              Prioridade {priorityLabel[task.priority]}
-                            </span>
-                            {task.storyPoints ? (
-                              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold">
-                                {task.storyPoints} pts
-                              </span>
-                            ) : null}
-                            {task.assignee ? (
-                              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold text-muted-foreground">
-                                {task.assignee}
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <div className="mt-4 flex items-center gap-3">
-                            <select
-                              value={task.columnId}
-                              onChange={(event) => handleMoveTask(task, event.target.value)}
-                              className="w-full rounded-2xl border border-white/10 bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/50"
-                              disabled={saving}
-                            >
-                              {board.columns.map((targetColumn) => (
-                                <option key={targetColumn.id} value={targetColumn.id}>
-                                  Mover para {targetColumn.title}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </article>
-                      ))
-                    )}
+          <div className="grid gap-5 xl:grid-cols-3">
+            {board.columns.map((column) => (
+              <div key={column.id} className={`rounded-3xl border p-5 ${columnTone[column.code]}`}>
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold">{column.title}</h3>
+                    <p className="text-sm text-muted-foreground">{column.tasks.length} task(s)</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : null}
+
+                <div className="space-y-4">
+                  {column.tasks.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-background/40 px-4 py-8 text-center text-sm text-muted-foreground">
+                      Nenhuma task nesta coluna.
+                    </div>
+                  ) : (
+                    column.tasks.map((task) => (
+                      <div key={task.id} className="rounded-3xl border border-white/10 bg-background/70 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold tracking-widest text-primary uppercase">{task.jiraCode}</p>
+                            <h4 className="mt-2 text-base font-semibold">{task.title}</h4>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="rounded-full border border-white/10 bg-white/5 p-2 text-muted-foreground transition hover:text-destructive"
+                            aria-label="Excluir task"
+                            disabled={saving}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+
+                        {task.description ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{task.description}</p> : null}
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${priorityTone[task.priority]}`}>
+                            {priorityLabel[task.priority]}
+                          </span>
+
+                          {task.storyPoints !== null ? (
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                              {task.storyPoints} SP
+                            </span>
+                          ) : null}
+
+                          {task.assignee ? (
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                              {task.assignee}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <label className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                            Mover para
+                          </label>
+                          <select
+                            value={task.columnId}
+                            onChange={(event) => handleMoveTask(task, event.target.value)}
+                            className="w-full rounded-2xl border border-white/10 bg-background/70 px-4 py-3 text-sm outline-none transition focus:border-primary/50"
+                            disabled={saving}
+                          >
+                            {board.columns.map((targetColumn) => (
+                              <option key={targetColumn.id} value={targetColumn.id}>
+                                {targetColumn.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       </main>
 
       <Footer />
-    </div>
-  )
-}
-
-function MetricCard({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  rotateIcon = false,
-}: {
-  icon: typeof ClipboardList
-  label: string
-  value: string
-  detail: string
-  rotateIcon?: boolean
-}) {
-  return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
-          <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
-        </div>
-        <div className="flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-background/70 text-primary">
-          <Icon size={20} className={rotateIcon ? "animate-spin [animation-duration:3s]" : ""} />
-        </div>
-      </div>
     </div>
   )
 }

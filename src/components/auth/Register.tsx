@@ -4,16 +4,17 @@ import { useForm } from "@tanstack/react-form"
 import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from "lucide-react"
 
 import GoogleLogo from "@/assets/google-logo.svg"
+import { useRegister } from "@/hooks/useAuth"
+import { ApiError, getApiBaseUrl } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { ApiError, getApiBaseUrl, register } from "@/lib/api"
 
 const Register = () => {
   const navigate = useNavigate()
+  const registerMutation = useRegister()
   const [showPassword, setShowPassword] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
   const form = useForm({
     defaultValues: {
@@ -29,20 +30,18 @@ const Register = () => {
       }
 
       setFeedback(null)
-      setLoading(true)
 
       try {
-        await register({
+        await registerMutation.mutateAsync({
           name: value.name,
           email: value.email,
           password: value.password,
         })
         navigate("/dashboard")
       } catch (error) {
-        const message = error instanceof ApiError ? error.message : "Não foi possível concluir o cadastro agora."
+        const message =
+          error instanceof ApiError ? error.message : "Não foi possível concluir o cadastro agora."
         setFeedback(message)
-      } finally {
-        setLoading(false)
       }
     },
   })
@@ -133,15 +132,21 @@ const Register = () => {
           Ao se cadastrar, você concorda com nossos Termos de Serviço e Política de Privacidade.
         </p>
 
-        <Button type="submit" className="h-12 w-full cursor-pointer rounded-xl font-semibold shadow-lg shadow-primary/20" disabled={loading}>
-          {loading ? "Criando conta..." : "Criar conta"}
+        <Button
+          type="submit"
+          className="h-12 w-full cursor-pointer rounded-xl font-semibold shadow-lg shadow-primary/20"
+          disabled={registerMutation.isPending}
+        >
+          {registerMutation.isPending ? "Criando conta..." : "Criar conta"}
           <ArrowRight size={16} className="ml-2" />
         </Button>
       </form>
 
       <div className="relative flex items-center gap-4">
         <Separator className="flex-1 bg-white/10" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ou cadastre-se com</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Ou cadastre-se com
+        </span>
         <Separator className="flex-1 bg-white/10" />
       </div>
 

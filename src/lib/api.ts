@@ -21,7 +21,44 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function parseErrorMessage(response: Response, fallbackMessage: string) {
+  const contentType = response.headers.get("content-type") ?? ""
+
+  if (contentType.includes("application/json")) {
+    try {
+      const data = (await response.json()) as Record<string, unknown>
+      const message =
+        (typeof data.message === "string" && data.message) ||
+        (typeof data.error === "string" && data.error) ||
+        (typeof data.details === "string" && data.details)
+
+      return message || fallbackMessage
+    } catch {
+      return fallbackMessage
+    }
+  }
+
+  try {
+    const text = await response.text()
+    return text || fallbackMessage
+  } catch {
+    return fallbackMessage
+  }
+}
+
+async function tryRefreshToken() {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+  return response.ok
+}
+
+async function request<T>(path: string, init?: RequestInit, retryOnUnauthorized = true): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: "include",
     headers: {
@@ -31,10 +68,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   })
 
+  if (response.status === 401 && retryOnUnauthorized && path !== "/auth/refresh" && path !== "/auth/login" && path !== "/auth/register") {
+    const refreshed = await tryRefreshToken()
+
+    if (refreshed) {
+      return request<T>(path, init, false)
+    }
+  }
+
   if (!response.ok) {
     const fallbackMessage = `Falha ao processar ${path}`
-    const responseText = await response.text()
-    throw new ApiError(responseText || fallbackMessage, response.status)
+    const message = await parseErrorMessage(response, fallbackMessage)
+    throw new ApiError(message, response.status)
   }
 
   if (response.status === 204) {
@@ -49,23 +94,35 @@ export function getApiBaseUrl() {
 }
 
 export async function login(payload: AuthPayload) {
-  return request<AuthResponse>("/auth/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
+  return request<AuthResponse>(
+    "/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    false
+  )
 }
 
 export async function register(payload: RegisterPayload) {
-  return request<AuthResponse>("/auth/register", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
+  return request<AuthResponse>(
+    "/auth/register",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    false
+  )
 }
 
 export async function logout() {
-  return request<{ message: string }>("/auth/logout", {
-    method: "POST",
-  })
+  return request<{ message: string }>(
+    "/auth/logout",
+    {
+      method: "POST",
+    },
+    false
+  )
 }
 
 export async function fetchCurrentUser() {
