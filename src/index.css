@@ -561,3 +561,9 @@ body::-webkit-scrollbar-thumb:hover {
   );
   filter: blur(0.4px);
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

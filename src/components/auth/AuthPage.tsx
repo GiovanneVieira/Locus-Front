@@ -12,7 +12,7 @@ const AuthPage = () => {
   const backPath = context ? `/${context}` : "/"
 
   return (
-    <div className="relative flex items-center justify-center overflow-hidden bg-background text-foreground outline-2">
+    <div className="relative flex items-center justify-center overflow-hidden bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0">
         <div className="hero-orb top-[10%] left-[-10%] opacity-60" />
         <div className="hero-orb-secondary right-[-5%] bottom-[10%] opacity-50" />

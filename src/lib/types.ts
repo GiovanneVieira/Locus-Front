@@ -72,6 +72,7 @@ export interface UserSession {
   name: string
   email: string
   role: string
+  pfpUrl?: string
   createdAt: string
   updatedAt: string | null
 }

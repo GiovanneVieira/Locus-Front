@@ -36,7 +36,7 @@ const Login = () => {
   }
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-col gap-6 duration-500">
+    <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-col gap-6 duration-500 ">
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {

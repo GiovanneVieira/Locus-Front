@@ -1,4 +1,4 @@
-interface NavItem {
+export interface NavItem {
   nome: string
   rota: string
 }
