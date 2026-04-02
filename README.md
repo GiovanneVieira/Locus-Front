@@ -3,7 +3,7 @@
 Basta abrir a pasta do projeto em seu repositório local e digitar:
 
 ```bash
-docker compose up --watch
+docker compose up --build --watch
 ```
 
 O ```--watch``` serve para que sempre que houver qualquer alteração no código a imagem seja rebuildada e um container suba automaticamente. 
