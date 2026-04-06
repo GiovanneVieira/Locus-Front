@@ -87,7 +87,9 @@ async function request<T>(path: string, init?: RequestInit, retryOnUnauthorized 
     return undefined as T
   }
 
-  return (await response.json()) as T
+  const result = await response.json()
+  console.log(`JSON result ${result}`)
+  return (result) as T
 }
 
 export function getApiBaseUrl() {

@@ -15,24 +15,48 @@ import {
 import { useAuth } from '@/context/authContext';
 import { useLogout } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router';
-import {toast} from 'sonner'
+import { toast } from 'sonner';
 import { Spinner } from './ui/spinner';
-import { User } from 'lucide-react';
 
+import { User } from 'lucide-react';
 export function AvatarDropdown() {
     const currentUser = useAuth();
     const navigate = useNavigate();
-    const { mutateAsync, isPending, isSuccess } = useLogout();
+    const { mutateAsync, isPending } = useLogout();
 
     const handleLogout = async () => {
+        const logoutPromise = mutateAsync();
+        // O toast.promise gerencia o Spinner e as mensagens sozinho
+        toast.promise(logoutPromise, {
+            loading: (
+                <div className="flex items-center gap-2">
+                    Saindo... <Spinner className="size-4" />
+                </div>
+            ),
+            success: 'Desconectado com sucesso!',
+            error: 'Erro ao sair',
+            position: 'top-right',
+        });
         try {
+            toast(
+                <div className="flex">
+                    Logging out... <Spinner />
+                </div>,
+                { position: 'top-right' },
+            );
             await mutateAsync();
+            toast('Logged out successfully', {
+                position: 'top-right',
+            });
+            navigate('/');
         } catch (error) {
             console.error('Erro no logout:', error);
+            toast.error('Error logging out', {
+                position: 'top-right',
+                duration: 1000,
+            });
         }
     };
-
-    isSuccess && toast("Logged out succesfully", {position: 'top-right', duration: 1000})
 
     return (
         <DropdownMenu>
@@ -46,7 +70,9 @@ export function AvatarDropdown() {
                             src={currentUser?.pfpUrl}
                             alt="User profile"
                         />
-                        <AvatarFallback><User/></AvatarFallback>
+                        <AvatarFallback>
+                            <User />
+                        </AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
