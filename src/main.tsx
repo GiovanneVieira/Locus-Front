@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { queryClient } from '@/lib/queryClient';
 import { router } from './routes/routes';
 import { AuthLoader } from './components/auth/AuthLoader';
+import { Toaster } from 'sonner';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
             <AuthLoader>
                 <ThemeProvider>
                     <RouterProvider router={router} />
+                    <Toaster></Toaster>
                 </ThemeProvider>
             </AuthLoader>
         </QueryClientProvider>

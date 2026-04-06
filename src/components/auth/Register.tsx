@@ -9,6 +9,7 @@ import { ApiError, getApiBaseUrl } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { toast } from "sonner"
 
 const Register = () => {
   const navigate = useNavigate()
@@ -37,7 +38,8 @@ const Register = () => {
           email: value.email,
           password: value.password,
         })
-        navigate("/dashboard")
+        navigate("/")
+        console.log("Registered")
       } catch (error) {
         const message =
           error instanceof ApiError ? error.message : "Não foi possível concluir o cadastro agora."

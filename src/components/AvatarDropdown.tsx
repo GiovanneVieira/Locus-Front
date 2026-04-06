@@ -15,35 +15,24 @@ import {
 import { useAuth } from '@/context/authContext';
 import { useLogout } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router';
+import {toast} from 'sonner'
 import { Spinner } from './ui/spinner';
-import { queryClient } from '@/lib/queryClient';
+import { User } from 'lucide-react';
 
 export function AvatarDropdown() {
     const currentUser = useAuth();
     const navigate = useNavigate();
-    const { mutateAsync, isPending } = useLogout();
+    const { mutateAsync, isPending, isSuccess } = useLogout();
+
     const handleLogout = async () => {
         try {
             await mutateAsync();
-
-            queryClient.clear();
-
-            window.location.href = '/';
         } catch (error) {
             console.error('Erro no logout:', error);
-            window.location.href = '/';
         }
     };
 
-    if (!currentUser) return null;
-
-    {
-        isPending && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-full">
-                <Spinner className="size-4" />
-            </div>
-        );
-    }
+    isSuccess && toast("Logged out succesfully", {position: 'top-right', duration: 1000})
 
     return (
         <DropdownMenu>
@@ -57,7 +46,7 @@ export function AvatarDropdown() {
                             src={currentUser?.pfpUrl}
                             alt="User profile"
                         />
-                        <AvatarFallback>CN</AvatarFallback>
+                        <AvatarFallback><User/></AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>

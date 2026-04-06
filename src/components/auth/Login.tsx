@@ -9,13 +9,19 @@ import { ApiError, getApiBaseUrl } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { toast } from "sonner"
 
 const Login = () => {
   const navigate = useNavigate()
   const loginMutation = useLogin()
+  const {isSuccess, isPending} = loginMutation
   const [hidePassword, setHidePassword] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
 
+  const handleSuccess = () => {
+    toast("Logged in succesfully", {position: "top-right"})
+    console.log("Log out");
+  }
   const form = useForm({
     defaultValues: { email: "", password: "" },
     onSubmit: async ({ value }) => {
@@ -34,6 +40,8 @@ const Login = () => {
   function handleGoogleLogin() {
     window.location.assign(`${getApiBaseUrl()}/oauth2/authorization/google`)
   }
+
+  isSuccess && handleSuccess();
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-col gap-6 duration-500 ">

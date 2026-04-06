@@ -16,14 +16,14 @@ import AuthPage from '@/components/auth/AuthPage';
 import { NavItems } from '@/components/NavItems';
 import { AvatarDropdown } from '../AvatarDropdown';
 import AppNavbar from '../AppNavbar';
-import { AuthContext } from '@/context/authContext';
+import { useAuth } from '@/context/authContext';
 
 export default function Header() {
     const { theme, setTheme } = useTheme();
     const [menuAberto, setMenuAberto] = useState(false);
     const [authAberto, setAuthAberto] = useState(false);
+    const currentUser = useAuth()
     const location = useLocation();
-    const currentUser = useContext(AuthContext);
     const paginaAtual = useMemo(() => {
         const pagina = navegacao.find(
             (item) => item.rota === location.pathname,
@@ -37,6 +37,7 @@ export default function Header() {
 
     const alternarTema = () =>
         setTheme(theme === 'dark' ? 'light' : 'dark');
+
 
     return (
         <header className="header-glow-line sticky top-0 z-50 w-full border-b border-white/10 bg-background/55 backdrop-blur-2xl">
@@ -80,11 +81,10 @@ export default function Header() {
                     </button>
 
                     {currentUser ? (
-                        <AvatarDropdown />
+                        <AvatarDropdown/>
                     ) : (
                         <Dialog
-                            open={authAberto}
-                            onOpenChange={setAuthAberto}>
+                        onOpenChange={setAuthAberto}>
                             <DialogTrigger asChild>
                                 <Button
                                     variant="outline"
