@@ -41,11 +41,12 @@ const AppDialog = ({ isMobile }: appDialogProps) => {
                         Entrar
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="h-[95%] p-0 shadow-none sm:rounded-2xl border-none! ring-0! bg-transparent! outline-none!">
+                <DialogContent className="max-w-112.5 p-0 border-none rounded-4xl shadow-none outline-none focus:ring-0 focus:ring-offset-0">
                     <DialogTitle className="sr-only">
                         Autenticação
                     </DialogTitle>
-                    <div className="relative">
+
+                    <div className="relative overflow-hidden rounded-3xl isolate">
                         <AuthPage />
                     </div>
                 </DialogContent>

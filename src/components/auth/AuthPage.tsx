@@ -12,14 +12,14 @@ const AuthPage = () => {
   const backPath = context ? `/${context}` : "/"
 
   return (
-    <div className="relative flex items-center justify-center overflow-hidden bg-background text-foreground bg-transparent!">
+    <div className="relative flex items-center justify-center overflow-hidden text-foreground bg-transparent">
       <div className="pointer-events-none absolute inset-0">
         <div className="hero-orb top-[10%] left-[-10%] opacity-60" />
         <div className="hero-orb-secondary right-[-5%] bottom-[10%] opacity-50" />
         <div className="grid-pattern absolute inset-0 opacity-20" />
       </div>
 
-      <div className="glass-card relative flex h-full w-full flex-col gap-8 rounded-none border-none p-8 shadow-none transition-none hover:transform-none md:p-10">
+      <div className="glass-card relative flex h-full w-full flex-col gap-8 rounded-none border-none p-8 shadow-none transition-none hover:transform-none! md:p-10 bg-transparent!">
         <div className="flex flex-col items-center gap-6">
           <Link to={backPath} className="hover:scale-105 transition-transform">
             <LocusLogo className="size-10" />
