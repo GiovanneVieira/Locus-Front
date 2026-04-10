@@ -7,18 +7,21 @@ import './index.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { queryClient } from '@/lib/queryClient';
 import { router } from './routes/routes';
-import { AuthLoader } from './components/auth/AuthLoader';
 import { Toaster } from 'sonner';
+import { Spinner } from './components/ui/spinner';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <QueryClientProvider client={queryClient}>
-            <AuthLoader>
                 <ThemeProvider>
                     <RouterProvider router={router} />
-                    <Toaster></Toaster>
+                    <Toaster
+                        richColors
+                        position="top-right"
+                        icons={{
+                            loading: <Spinner className='text-card'/>,
+                        }}></Toaster>
                 </ThemeProvider>
-            </AuthLoader>
         </QueryClientProvider>
     </StrictMode>,
 );

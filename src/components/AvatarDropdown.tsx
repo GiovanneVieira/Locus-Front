@@ -12,50 +12,44 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/context/authContext';
-import { useLogout } from '@/hooks/useAuth';
+import { useCurrentUser, useLogout } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { Spinner } from './ui/spinner';
 
 import { User } from 'lucide-react';
+import { ToastCard } from './ToastCard';
+import { useAuthStore } from '@/stores/useAuthStore';
 export function AvatarDropdown() {
-    const currentUser = useAuth();
+    const { data: user } = useCurrentUser();
     const navigate = useNavigate();
     const { mutateAsync, isPending } = useLogout();
+    const setOpen = useAuthStore(s => s.setOpen)
 
     const handleLogout = async () => {
         const logoutPromise = mutateAsync();
         // O toast.promise gerencia o Spinner e as mensagens sozinho
         toast.promise(logoutPromise, {
-            loading: (
-                <div className="flex items-center gap-2">
-                    Saindo... <Spinner className="size-4" />
-                </div>
-            ),
-            success: 'Desconectado com sucesso!',
-            error: 'Erro ao sair',
-            position: 'top-right',
+            loading: <ToastCard text="Saindo..." />,
+            success: () => {
+                return (
+                    <ToastCard
+                        text="Desconectado com sucesso!"
+                        isSuccess={true}
+                    />
+                );
+            },
+            error: (error) => {
+                console.error(`Error logging out: ${error}`);
+                return (
+                    <ToastCard
+                        text="Erro ao sair"
+                        isError={true}
+                    />
+                );
+            },
+            className: 'border-2 border-primary bg-foreground!', // Estilo do balão externo
+            duration: 1000,
         });
-        try {
-            toast(
-                <div className="flex">
-                    Logging out... <Spinner />
-                </div>,
-                { position: 'top-right' },
-            );
-            await mutateAsync();
-            toast('Logged out successfully', {
-                position: 'top-right',
-            });
-            navigate('/');
-        } catch (error) {
-            console.error('Erro no logout:', error);
-            toast.error('Error logging out', {
-                position: 'top-right',
-                duration: 1000,
-            });
-        }
     };
 
     return (
@@ -67,7 +61,7 @@ export function AvatarDropdown() {
                     className="rounded-full">
                     <Avatar>
                         <AvatarImage
-                            src={currentUser?.pfpUrl}
+                            src={user?.pfpUrl}
                             alt="User profile"
                         />
                         <AvatarFallback>
