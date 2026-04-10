@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useForm } from '@tanstack/react-form';
 import GoogleLogo from '@/assets/google-logo.svg';

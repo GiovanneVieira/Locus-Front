@@ -83,7 +83,7 @@ export default function Header() {
                 </div>
             </div>
 
-            <div className={`overflow-hidden border-t border-white/10 bg-background/80 backdrop-blur-2xl transition-all duration-300 lg:hidden ${menuAberto ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`overflow-hidden border-t border-white/10 bg-background/80 backdrop-blur-2xl transition-all duration-300 lg:hidden ${menuAberto ? 'max-h-125 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="mx-auto max-w-7xl px-6 py-5">
                     <div className="mb-5 rounded-3xl border border-white/10 bg-white/5 p-4">
                         <div className="grid gap-2">

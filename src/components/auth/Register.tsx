@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
 import { useForm } from '@tanstack/react-form';
 import {
     ArrowRight,
