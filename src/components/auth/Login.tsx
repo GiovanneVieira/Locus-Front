@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import { Eye, EyeOff, Lock, Mail } from "lucide-react"
 import { useForm } from "@tanstack/react-form"
 
@@ -12,9 +12,12 @@ import { Separator } from "@/components/ui/separator"
 
 const Login = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const loginMutation = useLogin()
   const [hidePassword, setHidePassword] = useState(true)
   const [feedback, setFeedback] = useState<string | null>(null)
+
+  const next = searchParams.get("next") || "/"
 
   const form = useForm({
     defaultValues: { email: "", password: "" },
@@ -23,9 +26,10 @@ const Login = () => {
 
       try {
         await loginMutation.mutateAsync(value)
-        navigate("/dashboard")
+        navigate(next, { replace: true })
       } catch (error) {
-        const message = error instanceof ApiError ? error.message : "Não foi possível autenticar agora."
+        const message =
+          error instanceof ApiError ? error.message : "Não foi possível autenticar agora."
         setFeedback(message)
       }
     },
@@ -33,6 +37,10 @@ const Login = () => {
 
   function handleGoogleLogin() {
     window.location.assign(`${getApiBaseUrl()}/oauth2/authorization/google`)
+  }
+
+  function handleFacebookLogin() {
+    window.location.assign(`${getApiBaseUrl()}/oauth2/authorization/facebook`)
   }
 
   return (
@@ -119,8 +127,8 @@ const Login = () => {
         <Button
           type="button"
           variant="outline"
-          className="h-11 cursor-not-allowed rounded-xl border-white/10 bg-white/5 transition-all hover:bg-white/10"
-          disabled
+          className="h-11 cursor-pointer rounded-xl border-white/10 bg-white/5 transition-all hover:bg-white/10"
+          onClick={handleFacebookLogin}
         >
           <span className="mr-2 text-[1.25rem] font-bold text-blue-500">f</span>
           Facebook

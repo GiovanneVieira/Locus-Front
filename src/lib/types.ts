@@ -1,7 +1,7 @@
 import type { LucideProps } from "lucide-react"
 import type { ForwardRefExoticComponent, RefAttributes } from "react"
 
-export type LucideIconType = ForwardRefExoticComponent<
+export type LucideIconType = ForwardRefExoticComponent
   Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
 >
 
@@ -67,66 +67,129 @@ export interface AuthResponse {
   accessToken: string
 }
 
+export type UserRole = "COMMON" | "HOST" | "ADMIN"
+
 export interface UserSession {
   id: string
   name: string
   email: string
-  role: string
+  role: UserRole | string
+  phone?: string | null
+  bio?: string | null
+  avatarUrl?: string | null
+  host?: boolean
   createdAt: string
   updatedAt: string | null
 }
 
-export type TaskPriority = "LOW" | "MEDIUM" | "HIGH"
-export type TaskColumnCode = "TODO" | "IN_PROGRESS" | "DONE"
-
-export interface BoardTask {
-  id: string
-  jiraCode: string
-  title: string
-  description: string | null
-  priority: TaskPriority
-  position: number
-  storyPoints: number | null
-  assignee: string | null
-  columnId: string
-  columnCode: TaskColumnCode
-  createdAt?: string
-  updatedAt?: string
+export interface UpdateUserPayload {
+  name?: string
+  phone?: string | null
+  bio?: string | null
+  avatarUrl?: string | null
 }
 
-export interface BoardColumn {
+export interface Address {
   id: string
   title: string
-  code: TaskColumnCode
-  position: number
-  tasks: BoardTask[]
-}
-
-export interface Board {
-  id: string
-  name: string
-  description: string
-  columns: BoardColumn[]
-}
-
-export interface CreateTaskPayload {
-  jiraCode: string
-  title: string
-  description: string
-  priority: TaskPriority
-  columnId: string
-  position?: number
-  storyPoints?: number | null
-  assignee?: string
-}
-
-export interface UpdateTaskPayload {
-  jiraCode?: string
-  title?: string
   description?: string | null
-  priority?: TaskPriority
-  columnId?: string
-  position?: number
-  storyPoints?: number | null
-  assignee?: string | null
+  street: string
+  number: string
+  complement?: string | null
+  neighborhood: string
+  city: string
+  state: string
+  country: string
+  zipCode: string
+  latitude?: number | null
+  longitude?: number | null
+  pricePerNight?: number | null
+  maxGuests?: number | null
+  coverImageUrl?: string | null
+  ownerId: string
+  ownerName?: string | null
+  createdAt: string
+  updatedAt: string | null
+}
+
+export interface CreateAddressPayload {
+  title: string
+  description?: string | null
+  street: string
+  number: string
+  complement?: string | null
+  neighborhood: string
+  city: string
+  state: string
+  country: string
+  zipCode: string
+  latitude?: number | null
+  longitude?: number | null
+  pricePerNight?: number | null
+  maxGuests?: number | null
+  coverImageUrl?: string | null
+}
+
+export type UpdateAddressPayload = Partial<CreateAddressPayload>
+
+export interface AddressSearchParams {
+  query?: string
+  city?: string
+  state?: string
+  country?: string
+  minPrice?: number
+  maxPrice?: number
+  page?: number
+  size?: number
+}
+
+export interface PagedResponse<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+/* =========================
+   Admin
+   ========================= */
+
+export interface AdminMetrics {
+  totalUsers: number
+  totalHosts: number
+  totalAdmins: number
+  totalAddresses: number
+  newUsersLast7Days: number
+  newAddressesLast7Days: number
+  activeUsers?: number
+  blockedUsers?: number
+}
+
+export interface AdminUser extends UserSession {
+  blocked?: boolean
+  addressCount?: number
+  lastLoginAt?: string | null
+}
+
+export interface AdminUsersSearchParams {
+  query?: string
+  role?: UserRole | string
+  page?: number
+  size?: number
+}
+
+export interface ChangeUserRolePayload {
+  role: UserRole | string
+}
+
+export interface AdminAuditEntry {
+  id: string
+  actorId: string | null
+  actorName: string | null
+  action: string
+  targetType: string
+  targetId?: string | null
+  description?: string | null
+  createdAt: string
 }
