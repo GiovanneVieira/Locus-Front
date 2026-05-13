@@ -25,7 +25,7 @@ export const navegacao: NavItem[] = [
     rota: "/planejamento",
   },
   {
-    nome: "Dashboard",
-    rota: "/dashboard",
+    nome: "Endereços",
+    rota: "/enderecos",
   },
 ]

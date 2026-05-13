@@ -1,11 +1,18 @@
 import type {
+  Address,
+  AddressSearchParams,
+  AdminAuditEntry,
+  AdminMetrics,
+  AdminUser,
+  AdminUsersSearchParams,
   AuthPayload,
   AuthResponse,
-  Board,
-  BoardTask,
-  CreateTaskPayload,
+  ChangeUserRolePayload,
+  CreateAddressPayload,
+  PagedResponse,
   RegisterPayload,
-  UpdateTaskPayload,
+  UpdateAddressPayload,
+  UpdateUserPayload,
   UserSession,
 } from "@/lib/types"
 
@@ -50,11 +57,8 @@ async function tryRefreshToken() {
   const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "POST",
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
   })
-
   return response.ok
 }
 
@@ -68,9 +72,14 @@ async function request<T>(path: string, init?: RequestInit, retryOnUnauthorized 
     ...init,
   })
 
-  if (response.status === 401 && retryOnUnauthorized && path !== "/auth/refresh" && path !== "/auth/login" && path !== "/auth/register") {
+  if (
+    response.status === 401 &&
+    retryOnUnauthorized &&
+    path !== "/auth/refresh" &&
+    path !== "/auth/login" &&
+    path !== "/auth/register"
+  ) {
     const refreshed = await tryRefreshToken()
-
     if (refreshed) {
       return request<T>(path, init, false)
     }
@@ -93,13 +102,12 @@ export function getApiBaseUrl() {
   return API_BASE_URL
 }
 
+/* ========== Auth ========== */
+
 export async function login(payload: AuthPayload) {
   return request<AuthResponse>(
     "/auth/login",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
+    { method: "POST", body: JSON.stringify(payload) },
     false
   )
 }
@@ -107,48 +115,118 @@ export async function login(payload: AuthPayload) {
 export async function register(payload: RegisterPayload) {
   return request<AuthResponse>(
     "/auth/register",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
+    { method: "POST", body: JSON.stringify(payload) },
     false
   )
 }
 
 export async function logout() {
-  return request<{ message: string }>(
-    "/auth/logout",
-    {
-      method: "POST",
-    },
-    false
-  )
+  return request<{ message: string }>("/auth/logout", { method: "POST" }, false)
 }
+
+/* ========== User ========== */
 
 export async function fetchCurrentUser() {
   return request<UserSession>("/user/me")
 }
 
-export async function fetchBoard() {
-  return request<Board>("/dashboard/board")
-}
-
-export async function createTask(payload: CreateTaskPayload) {
-  return request<BoardTask>("/dashboard/tasks", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
-}
-
-export async function updateTask(taskId: string, payload: UpdateTaskPayload) {
-  return request<BoardTask>(`/dashboard/tasks/${taskId}`, {
+export async function updateCurrentUser(payload: UpdateUserPayload) {
+  return request<UserSession>("/user/me", {
     method: "PATCH",
     body: JSON.stringify(payload),
   })
 }
 
-export async function deleteTask(taskId: string) {
-  return request<{ message: string }>(`/dashboard/tasks/${taskId}`, {
-    method: "DELETE",
+export async function becomeHost() {
+  return request<UserSession>("/user/become-host", { method: "POST" })
+}
+
+/* ========== Addresses (public) ========== */
+
+function buildQueryString(params: Record<string, unknown> | undefined) {
+  if (!params) return ""
+  const search = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "") continue
+    search.append(key, String(value))
+  }
+
+  const qs = search.toString()
+  return qs ? `?${qs}` : ""
+}
+
+export async function fetchAddresses(params?: AddressSearchParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PagedResponse<Address>>(`/addresses${qs}`)
+}
+
+export async function fetchMyAddresses() {
+  return request<Address[]>("/addresses/me")
+}
+
+export async function fetchAddressById(id: string) {
+  return request<Address>(`/addresses/${id}`)
+}
+
+export async function createAddress(payload: CreateAddressPayload) {
+  return request<Address>("/addresses", {
+    method: "POST",
+    body: JSON.stringify(payload),
   })
+}
+
+export async function updateAddress(id: string, payload: UpdateAddressPayload) {
+  return request<Address>(`/addresses/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteAddress(id: string) {
+  return request<{ message: string }>(`/addresses/${id}`, { method: "DELETE" })
+}
+
+/* ========== Admin ========== */
+
+export async function fetchAdminMetrics() {
+  return request<AdminMetrics>("/admin/metrics")
+}
+
+export async function fetchAdminUsers(params?: AdminUsersSearchParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PagedResponse<AdminUser>>(`/admin/users${qs}`)
+}
+
+export async function changeUserRole(id: string, payload: ChangeUserRolePayload) {
+  return request<AdminUser>(`/admin/users/${id}/role`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteUser(id: string) {
+  return request<{ message: string }>(`/admin/users/${id}`, { method: "DELETE" })
+}
+
+export async function blockUser(id: string) {
+  return request<AdminUser>(`/admin/users/${id}/block`, { method: "POST" })
+}
+
+export async function unblockUser(id: string) {
+  return request<AdminUser>(`/admin/users/${id}/unblock`, { method: "POST" })
+}
+
+export async function fetchAdminAddresses(params?: AddressSearchParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PagedResponse<Address>>(`/admin/addresses${qs}`)
+}
+
+export async function deleteAddressAsAdmin(id: string) {
+  return request<{ message: string }>(`/admin/addresses/${id}`, { method: "DELETE" })
+}
+
+export async function fetchAdminAudit(params?: { page?: number; size?: number }) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PagedResponse<AdminAuditEntry>>(`/admin/audit${qs}`)
 }
