@@ -5,8 +5,8 @@ interface StepCardProps {
 }
 
 export const StepCard = ({ etapa, titulo, descricao }: StepCardProps) => (
-  <article className="rounded-[26px] border border-white/10 bg-white/5 p-5">
-    <div className="mb-3 inline-flex rounded-full border border-white/10 bg-black/15 px-3 py-1 text-xs text-primary">
+  <article className="rounded-[26px] border border-border bg-secondary/50 p-5">
+    <div className="mb-3 inline-flex rounded-full border border-border bg-black/15 px-3 py-1 text-xs text-primary">
       Etapa {etapa}
     </div>
     <h2 className="text-xl font-semibold">{titulo}</h2>

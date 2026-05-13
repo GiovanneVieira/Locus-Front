@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import { useForm } from "@tanstack/react-form"
 import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from "lucide-react"
 
@@ -12,9 +12,12 @@ import { Separator } from "@/components/ui/separator"
 
 const Register = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const registerMutation = useRegister()
   const [showPassword, setShowPassword] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
+
+  const next = searchParams.get("next") || "/"
 
   const form = useForm({
     defaultValues: {
@@ -37,7 +40,7 @@ const Register = () => {
           email: value.email,
           password: value.password,
         })
-        navigate("/dashboard")
+        navigate(next, { replace: true })
       } catch (error) {
         const message =
           error instanceof ApiError ? error.message : "Não foi possível concluir o cadastro agora."
@@ -48,6 +51,10 @@ const Register = () => {
 
   function handleGoogleRegister() {
     window.location.assign(`${getApiBaseUrl()}/oauth2/authorization/google`)
+  }
+
+  function handleFacebookRegister() {
+    window.location.assign(`${getApiBaseUrl()}/oauth2/authorization/facebook`)
   }
 
   return (
@@ -67,7 +74,7 @@ const Register = () => {
                 value={field.state.value}
                 onChange={(event) => field.handleChange(event.target.value)}
                 placeholder="Digite seu nome completo"
-                className="h-12 rounded-xl border-white/10 bg-white/5 pl-10 transition-all focus:border-primary/50"
+                className="h-12 rounded-xl border-border bg-secondary/50 pl-10 transition-all focus:border-primary/50"
               />
             </div>
           )}
@@ -82,7 +89,7 @@ const Register = () => {
                 onChange={(event) => field.handleChange(event.target.value)}
                 type="email"
                 placeholder="Digite seu e-mail"
-                className="h-12 rounded-xl border-white/10 bg-white/5 pl-10 transition-all focus:border-primary/50"
+                className="h-12 rounded-xl border-border bg-secondary/50 pl-10 transition-all focus:border-primary/50"
               />
             </div>
           )}
@@ -97,7 +104,7 @@ const Register = () => {
                 onChange={(event) => field.handleChange(event.target.value)}
                 type={showPassword ? "text" : "password"}
                 placeholder="Crie uma senha forte"
-                className="h-12 rounded-xl border-white/10 bg-white/5 pr-10 pl-10 transition-all focus:border-primary/50"
+                className="h-12 rounded-xl border-border bg-secondary/50 pr-10 pl-10 transition-all focus:border-primary/50"
               />
               <button
                 type="button"
@@ -120,7 +127,7 @@ const Register = () => {
                 onChange={(event) => field.handleChange(event.target.value)}
                 type={showPassword ? "text" : "password"}
                 placeholder="Confirme sua senha"
-                className="h-12 rounded-xl border-white/10 bg-white/5 pl-10 transition-all focus:border-primary/50"
+                className="h-12 rounded-xl border-border bg-secondary/50 pl-10 transition-all focus:border-primary/50"
               />
             </div>
           )}
@@ -143,22 +150,34 @@ const Register = () => {
       </form>
 
       <div className="relative flex items-center gap-4">
-        <Separator className="flex-1 bg-white/10" />
+        <Separator className="flex-1 bg-secondary" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           Ou cadastre-se com
         </span>
-        <Separator className="flex-1 bg-white/10" />
+        <Separator className="flex-1 bg-secondary" />
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="h-11 w-full cursor-pointer rounded-xl border-white/10 bg-white/5 transition-all hover:bg-white/10"
-        onClick={handleGoogleRegister}
-      >
-        <img src={GoogleLogo} alt="Google" className="mr-2 w-4" />
-        Continuar com Google
-      </Button>
+      <div className="grid grid-cols-2 gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 cursor-pointer rounded-xl border-border bg-secondary/50 transition-all hover:bg-secondary"
+          onClick={handleGoogleRegister}
+        >
+          <img src={GoogleLogo} alt="Google" className="mr-2 w-4" />
+          Google
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 cursor-pointer rounded-xl border-border bg-secondary/50 transition-all hover:bg-secondary"
+          onClick={handleFacebookRegister}
+        >
+          <span className="mr-2 text-[1.25rem] font-bold text-blue-500">f</span>
+          Facebook
+        </Button>
+      </div>
     </div>
   )
 }

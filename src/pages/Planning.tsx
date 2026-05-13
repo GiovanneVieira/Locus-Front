@@ -87,7 +87,7 @@ export default function PlanningPage() {
               <Button
                 asChild
                 variant="outline"
-                className="rounded-full border-white/15 bg-white/5 px-6"
+                className="rounded-full border-border bg-secondary/50 px-6"
               >
                 <Link to="/radar">Abrir radar</Link>
               </Button>

@@ -5,15 +5,21 @@ import { RouterProvider } from "react-router"
 
 import "./index.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ErrorBoundary } from "@/components/feedback/ErrorBoundary"
+import { ToastProvider } from "@/components/feedback/ToastProvider"
 import { queryClient } from "@/lib/queryClient"
 import { router } from "./routes/routes"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <RouterProvider router={router} />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light">
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>
 )

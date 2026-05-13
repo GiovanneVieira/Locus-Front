@@ -36,7 +36,7 @@ const AuthPage = () => {
             </p>
           </div>
 
-          <div className="flex w-full rounded-2xl border border-white/10 bg-white/5 p-1">
+          <div className="flex w-full rounded-2xl border border-border bg-secondary/50 p-1">
             <button
               onClick={() => setCurrentCard("login")}
               className={`flex-1 cursor-pointer rounded-xl py-2 text-sm font-medium transition-all ${

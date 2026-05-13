@@ -18,10 +18,10 @@ export const DestinationCard = ({
     <div className={`h-72 rounded-[28px] p-5 ${gradiente}`}>
       <div className="flex h-full flex-col justify-between">
         <div className="flex items-center justify-between">
-          <span className="rounded-full border border-white/20 bg-black/15 px-4 py-2 text-xs font-medium text-white/90 backdrop-blur">
+          <span className="rounded-full border border-border/80 bg-black/15 px-4 py-2 text-xs font-medium text-white/90 backdrop-blur">
             {periodo}
           </span>
-          <span className="rounded-full border border-white/20 bg-black/15 px-4 py-2 text-xs font-medium text-white/90 backdrop-blur">
+          <span className="rounded-full border border-border/80 bg-black/15 px-4 py-2 text-xs font-medium text-white/90 backdrop-blur">
             {preco}
           </span>
         </div>

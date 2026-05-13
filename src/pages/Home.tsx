@@ -161,7 +161,7 @@ export default function Home() {
                 <Button
                   asChild
                   variant="outline"
-                  className="rounded-full border-white/15 bg-white/5 px-6 py-6"
+                  className="rounded-full border-border bg-secondary/50 px-6 py-6"
                 >
                   <Link to="/radar">Abrir radar de oportunidades</Link>
                 </Button>
@@ -219,7 +219,7 @@ export default function Home() {
             <Button
               asChild
               variant="outline"
-              className="rounded-full border-white/15"
+              className="rounded-full border-border"
             >
               <Link to="/destinos">Ver catálogo completo</Link>
             </Button>
@@ -346,7 +346,7 @@ export default function Home() {
                   <Button
                     asChild
                     variant="outline"
-                    className="rounded-full border-white/15 bg-white/5 px-6 py-6"
+                    className="rounded-full border-border bg-secondary/50 px-6 py-6"
                   >
                     <Link to="/planejamento">Abrir planejamento</Link>
                   </Button>

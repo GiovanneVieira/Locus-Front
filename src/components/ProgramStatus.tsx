@@ -11,11 +11,11 @@ export const ProgramStatus = ({
   saldo,
   valorProgresso,
 }: ProgramStatusProps) => (
-  <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
+  <div className="rounded-[24px] border border-border bg-secondary/50 p-4">
     <div className="mb-3 flex items-center justify-between">
       <span className="text-sm text-muted-foreground">{nome}</span>
       <span className="text-sm font-medium">{saldo}</span>
     </div>
-    <Progress value={valorProgresso} className="h-3 bg-white/10" />
+    <Progress value={valorProgresso} className="h-3 bg-secondary" />
   </div>
 )

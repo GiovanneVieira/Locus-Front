@@ -20,7 +20,7 @@ export const StatCard = ({
   <div
     className={`stat-card ${variant === "floating" ? "floating-card" : ""} ${className}`}
   >
-    <div className="mb-2 inline-flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+    <div className="mb-2 inline-flex size-11 items-center justify-center rounded-2xl border border-border bg-secondary/50">
       <Icon size={18} className="text-primary" />
     </div>
     {titulo && (

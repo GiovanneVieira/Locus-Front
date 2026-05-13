@@ -13,6 +13,10 @@ export const navegacao: NavItem[] = [
     rota: "/destinos",
   },
   {
+    nome: "Hospedagens",
+    rota: "/enderecos",
+  },
+  {
     nome: "Radar",
     rota: "/radar",
   },
@@ -25,7 +29,7 @@ export const navegacao: NavItem[] = [
     rota: "/planejamento",
   },
   {
-    nome: "Dashboard",
-    rota: "/dashboard",
+    nome: "Heurísticas",
+    rota: "/heuristicas",
   },
 ]

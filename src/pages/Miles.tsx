@@ -74,7 +74,7 @@ export default function MilesPage() {
               <Button
                 asChild
                 variant="outline"
-                className="rounded-full border-white/15 bg-white/5 px-6 text-foreground hover:bg-white/10"
+                className="rounded-full border-border bg-secondary/50 px-6 text-foreground hover:bg-secondary"
               >
                 <Link to="/planejamento">Planejar viagem</Link>
               </Button>
@@ -114,7 +114,7 @@ export default function MilesPage() {
                     {/* Utilizando Shadcn Progress com gradiente do index.css */}
                     <Progress
                       value={item.progresso}
-                      className="h-2.5 bg-white/10"
+                      className="h-2.5 bg-secondary"
                     />
                   </div>
                 ))}

@@ -91,7 +91,7 @@ export default function RadarPage() {
               <Button
                 asChild
                 variant="outline"
-                className="rounded-full border-white/15 bg-white/5 px-6 text-foreground hover:bg-white/10"
+                className="rounded-full border-border bg-secondary/50 px-6 text-foreground hover:bg-secondary"
               >
                 <Link to="/destinos">Explorar destinos</Link>
               </Button>
