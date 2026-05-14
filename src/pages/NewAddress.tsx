@@ -125,6 +125,9 @@ export default function NewAddressPage() {
 
         if (filesToUpload.length > 0) {
           uploadedUrls = await uploadMutation.mutateAsync(filesToUpload)
+          if (uploadedUrls.length !== filesToUpload.length) {
+            throw new Error("Upload incompleto: quantidade de URLs diferente da quantidade de arquivos.")
+          }
         }
 
         const remoteUrls = images
@@ -139,10 +142,14 @@ export default function NewAddressPage() {
           if (image.remote) {
             allImageUrls.push(remoteUrls[remoteIdx++])
           } else {
-            allImageUrls.push(uploadedUrls[uploadIdx++])
-          }
+              const nextUploadedUrl = uploadedUrls[uploadIdx++]
+              if (!nextUploadedUrl) {
+              throw new Error("Falha ao montar lista de imagens publicadas.")
+              }
+              allImageUrls.push(nextUploadedUrl)
+           }
         }
-
+        
         const payload: CreateAddressPayload = {
           title: value.title.trim(),
           description: value.description.trim() || null,

@@ -88,7 +88,7 @@ export default function AddressDetailsPage() {
             {(error as Error)?.message ?? "O endereço pode ter sido removido ou nunca existiu."}
           </p>
           <Button asChild className="mt-6 rounded-full px-5">
-            <Link to="/enderecos">Ver outros Hospedagens</Link>
+            <Link to="/enderecos">Ver outras Hospedagens</Link>
           </Button>
         </main>
         <Footer />

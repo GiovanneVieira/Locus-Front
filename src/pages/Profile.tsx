@@ -1,5 +1,5 @@
 import { use, useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router"
+import { Link, Navigate, useNavigate } from "react-router"
 import { useForm } from "@tanstack/react-form"
 import {
   BadgeCheck, CalendarDays, LogOut, Mail, MapPin, Phone,
@@ -75,16 +75,20 @@ export default function ProfilePage() {
     navigate("/", { replace: true })
   }
 
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <main className="mx-auto flex max-w-5xl items-center justify-center px-6 py-24">
-          <p className="text-sm text-muted-foreground">Carregando seu perfil…</p>
-        </main>
-        <Footer />
-      </div>
-    )
+  if (isLoading) {
+     return (
+       <div className="min-h-screen bg-background text-foreground">
+         <Header />
+         <main className="mx-auto flex max-w-5xl items-center justify-center px-6 py-24">
+           <p className="text-sm text-muted-foreground">Carregando seu perfil…</p>
+         </main>
+         <Footer />
+       </div>
+     )
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
   }
 
   const host = isHost(user)

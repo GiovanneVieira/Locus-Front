@@ -162,17 +162,17 @@ export async function fetchAddresses(params?: AddressSearchParams) {
 }
 
 export async function fetchMyAddresses() {
-  return request<Address[]>("/addresses/me")
+  return request<Address[]>("/address/rentable/me")
 }
 
 export async function fetchAddressById(id: string) {
-  return request<Address>(`/addresses/${id}`)
+  return request<Address>(`/address/rentable/user/${id}`)
 }
 
 export async function createAddress(payload: CreateAddressPayload) {
   return request<Address>("/addresses", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   })
 }
 

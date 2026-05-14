@@ -36,7 +36,7 @@ function formatDate(value?: string) {
       month: "short",
     })
   } catch {
-    return value
+    return null
   }
 }
 

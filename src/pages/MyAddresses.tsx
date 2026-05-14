@@ -58,7 +58,7 @@ export default function MyAddressesPage() {
               Meu portfólio
             </span>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-              Seus Hospedagens publicados
+              Suas Hospedagens publicadas
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
               Gerencie os imóveis que você publicou no Locus. Edite informações ou remova quando precisar.
