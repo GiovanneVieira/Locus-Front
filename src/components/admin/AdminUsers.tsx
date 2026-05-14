@@ -251,9 +251,9 @@ export default function AdminUsers() {
                   className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    {user.avatarUrl ? (
+                    {user.pfpUrl ? (
                       <img
-                        src={user.avatarUrl}
+                        src={user.pfpUrl}
                         alt={user.name}
                         className="size-10 shrink-0 rounded-full border border-border object-cover"
                       />
