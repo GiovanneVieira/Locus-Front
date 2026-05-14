@@ -96,6 +96,7 @@ export default function AdminPage() {
                       isActive
                         ? "border-primary/40 bg-primary/15 text-primary"
                         : "border-border bg-secondary/50 text-muted-foreground hover:border-border/80 hover:text-foreground"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-foreground"
                     }`}
                     aria-current={isActive ? "page" : undefined}
                   >

@@ -1,7 +1,7 @@
 import type { LucideProps } from "lucide-react"
 import type { ForwardRefExoticComponent, RefAttributes } from "react"
 
-export type LucideIconType = ForwardRefExoticComponent<
+export type LucideIconType = ForwardRefExoticComponent
   Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
 >
 
@@ -77,6 +77,7 @@ export interface UserSession {
   phone?: string | null
   bio?: string | null
   pfpUrl?: string | null
+  avatarUrl?: string | null
   host?: boolean
   createdAt: string
   updatedAt: string | null
@@ -87,6 +88,7 @@ export interface UpdateUserPayload {
   phone?: string | null
   bio?: string | null
   pfpUrl?: string | null
+  avatarUrl?: string | null
 }
 
 export interface Address {

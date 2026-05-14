@@ -31,5 +31,7 @@ export const navegacao: NavItem[] = [
   {
     nome: "Heurísticas",
     rota: "/heuristicas",
+    nome: "Endereços",
+    rota: "/enderecos",
   },
 ]

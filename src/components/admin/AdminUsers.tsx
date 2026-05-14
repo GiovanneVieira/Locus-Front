@@ -343,6 +343,7 @@ export default function AdminUsers() {
 
         {totalPages > 1 ? (
           <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between border-t border-white/10 px-5 py-3 text-xs text-muted-foreground">
             <span>
               Página {page + 1} de {totalPages}
             </span>
@@ -352,7 +353,7 @@ export default function AdminUsers() {
                 variant="outline"
                 disabled={page === 0}
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
-                className="gap-1 rounded-full border-border px-3"
+                className="gap-1 rounded-full border-white/15 px-3"
               >
                 <ChevronLeft size={14} /> Anterior
               </Button>
@@ -361,7 +362,7 @@ export default function AdminUsers() {
                 variant="outline"
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="gap-1 rounded-full border-border px-3"
+                className="gap-1 rounded-full border-white/15 px-3"
               >
                 Próxima <ChevronRight size={14} />
               </Button>

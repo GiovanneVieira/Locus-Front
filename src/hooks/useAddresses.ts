@@ -52,6 +52,7 @@ export function useCreateAddress() {
 
   return useMutation({
     mutationFn: (payload: CreateAddressPayload) => createRentableAddress(payload),
+    mutationFn: (payload: CreateAddressPayload) => createAddress(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: addressKeys.all })
     },

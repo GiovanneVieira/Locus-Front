@@ -3,6 +3,10 @@ import type { UserSession } from "@/lib/types"
 export function isHost(user?: UserSession | null) {
   if (!user) return false
   if (user.role === "ROLE_HOST" || user.role === "ROLE_ADMIN") return true
+  if (user.host === true) return true
+
+  const role = user.role?.toString().toUpperCase()
+  return role === "HOST" || role === "ADMIN"
 }
 
 export function getInitials(name: string | undefined | null) {

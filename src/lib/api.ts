@@ -169,6 +169,34 @@ export async function fetchAddressById(id: string) {
   return request<Address>(`/address/rentable/user/${id}`)
 }
 
+/* ========== Addresses (public) ========== */
+
+function buildQueryString(params: Record<string, unknown> | undefined) {
+  if (!params) return ""
+  const search = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "") continue
+    search.append(key, String(value))
+  }
+
+  const qs = search.toString()
+  return qs ? `?${qs}` : ""
+}
+
+export async function fetchAddresses(params?: AddressSearchParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PagedResponse<Address>>(`/addresses${qs}`)
+}
+
+export async function fetchMyAddresses() {
+  return request<Address[]>("/addresses/me")
+}
+
+export async function fetchAddressById(id: string) {
+  return request<Address>(`/addresses/${id}`)
+}
+
 export async function createAddress(payload: CreateAddressPayload) {
   return request<Address>("/addresses", {
     method: "POST",
@@ -222,6 +250,22 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   return data.urls ?? []
 }
 
+/* ========== Admin ========== */
+
+export async function fetchAdminMetrics() {
+  return request<AdminMetrics>("/admin/metrics")
+}
+
+export async function fetchAdminUsers(params?: AdminUsersSearchParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PagedResponse<AdminUser>>(`/admin/users${qs}`)
+}
+
+export async function changeUserRole(id: string, payload: ChangeUserRolePayload) {
+  return request<AdminUser>(`/admin/users/${id}/role`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  })
 /* ========== Admin ========== */
 
 export async function fetchAdminMetrics() {

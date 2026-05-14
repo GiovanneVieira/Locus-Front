@@ -162,6 +162,7 @@ const Register = () => {
           type="button"
           variant="outline"
           className="h-11 cursor-pointer rounded-xl border-border bg-secondary/50 transition-all hover:bg-secondary"
+          className="h-11 cursor-pointer rounded-xl border-white/10 bg-white/5 transition-all hover:bg-white/10"
           onClick={handleGoogleRegister}
         >
           <img src={GoogleLogo} alt="Google" className="mr-2 w-4" />
@@ -172,6 +173,7 @@ const Register = () => {
           type="button"
           variant="outline"
           className="h-11 cursor-pointer rounded-xl border-border bg-secondary/50 transition-all hover:bg-secondary"
+          className="h-11 cursor-pointer rounded-xl border-white/10 bg-white/5 transition-all hover:bg-white/10"
           onClick={handleFacebookRegister}
         >
           <span className="mr-2 text-[1.25rem] font-bold text-blue-500">f</span>

@@ -14,6 +14,9 @@ import {
   Sparkles,
   Trash2,
   Users,
+import { Link, useNavigate, useParams } from "react-router"
+import {
+  ArrowLeft, BadgeCheck, Building2, Globe2, MapPin, Trash2, Users,
 } from "lucide-react"
 
 import Header from "@/components/Header/Header"
@@ -28,6 +31,7 @@ import { ApiError } from "@/lib/api"
 import { getAmenityLabel } from "@/components/forms/AmenitySelector"
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog"
 import { useToast } from "@/components/feedback/ToastProvider"
+import { useState } from "react"
 
 function formatPrice(value: number | null | undefined) {
   if (value === null || value === undefined) return null
@@ -61,6 +65,26 @@ export default function AddressDetailsPage() {
       const message = err instanceof ApiError ? err.message : "Não foi possível remover agora."
       setFeedback(message)
       toast.error("Falha ao remover", message)
+  const [feedback, setFeedback] = useState<string | null>(null)
+
+  const isOwner = Boolean(
+    address && currentUser && address.ownerId === currentUser.id
+  )
+
+  async function handleDelete() {
+    if (!address) return
+    const confirmed = window.confirm(
+      "Tem certeza que deseja remover este endereço? Esta ação não pode ser desfeita."
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteMutation.mutateAsync(address.id)
+      navigate("/enderecos", { replace: true })
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Não foi possível remover agora."
+      setFeedback(message)
     }
   }
 
@@ -72,6 +96,8 @@ export default function AddressDetailsPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 size={20} className="animate-spin text-muted-foreground" />
           </div>
+        <main className="mx-auto max-w-5xl px-6 py-12">
+          <div className="h-80 animate-pulse rounded-3xl border border-white/5 bg-white/5" />
         </main>
         <Footer />
       </div>
@@ -89,6 +115,7 @@ export default function AddressDetailsPage() {
           </p>
           <Button asChild className="mt-6 rounded-full px-5">
             <Link to="/enderecos">Ver outras Hospedagens</Link>
+            <Link to="/enderecos">Ver outros endereços</Link>
           </Button>
         </main>
         <Footer />
@@ -245,6 +272,62 @@ export default function AddressDetailsPage() {
             <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
               <h2 className="text-lg font-semibold">Informações do imóvel</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <main className="mx-auto max-w-5xl px-6 py-12">
+        <Link
+          to="/enderecos"
+          className="mb-6 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft size={14} /> Voltar para endereços
+        </Link>
+
+        <section className="glass-card overflow-hidden p-0">
+          <div
+            className="relative h-64 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent md:h-80"
+            style={
+              address.coverImageUrl
+                ? {
+                    backgroundImage: `url(${address.coverImageUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }
+                : undefined
+            }
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/10 to-transparent" />
+            <div className="absolute bottom-5 left-5 right-5 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary backdrop-blur">
+                  <MapPin size={11} /> Localização
+                </span>
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+                  {address.title}
+                </h1>
+                <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin size={14} /> {address.neighborhood}, {address.city} — {address.state}, {address.country}
+                </p>
+              </div>
+              {price ? (
+                <div className="rounded-2xl border border-white/10 bg-background/70 px-4 py-3 text-right backdrop-blur">
+                  <p className="text-xs text-muted-foreground">A partir de</p>
+                  <p className="text-xl font-semibold">{price}</p>
+                  <p className="text-[10px] text-muted-foreground">por noite</p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-8 p-8 md:grid-cols-[1.4fr_0.6fr]">
+            <div className="flex flex-col gap-6">
+              {address.description ? (
+                <div>
+                  <h2 className="text-lg font-semibold">Sobre este lugar</h2>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-6 text-muted-foreground">
+                    {address.description}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="grid gap-3 sm:grid-cols-2">
                 <InfoRow icon={Building2} label="Endereço completo">
                   {address.street}, {address.number}
                   {address.complement ? ` — ${address.complement}` : ""}
@@ -324,6 +407,50 @@ export default function AddressDetailsPage() {
               </>
             ) : null}
           </aside>
+              </div>
+            </div>
+
+            <aside className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-5">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Anfitrião
+                </p>
+                <p className="mt-1 text-base font-semibold">
+                  {address.ownerName ?? "Anfitrião Locus"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Publicado em {formatDate(address.createdAt)}
+                </p>
+              </div>
+
+              <Separator className="bg-white/10" />
+
+              <Button className="rounded-full shadow-lg">Entrar em contato</Button>
+
+              {isOwner ? (
+                <>
+                  <Separator className="bg-white/10" />
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Ações do anfitrião
+                    </p>
+                    <Button
+                      variant="destructive"
+                      className="rounded-full"
+                      onClick={handleDelete}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 size={14} />
+                      {deleteMutation.isPending ? "Removendo…" : "Remover endereço"}
+                    </Button>
+                    {feedback ? (
+                      <p className="text-xs text-destructive">{feedback}</p>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+            </aside>
+          </div>
         </section>
       </main>
 
@@ -357,10 +484,12 @@ function InfoRow({
 }) {
   return (
     <div className="rounded-2xl border border-border bg-secondary/30 p-4">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon size={14} /> {label}
       </div>
       <p className="mt-1 text-sm">{children}</p>
     </div>
   )
+}
 }
