@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
   createAddress,
+  createRentableAddress,
   deleteAddress,
   fetchAddressById,
   fetchAddresses,
@@ -50,7 +51,7 @@ export function useCreateAddress() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: CreateAddressPayload) => createAddress(payload),
+    mutationFn: (payload: CreateAddressPayload) => createRentableAddress(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: addressKeys.all })
     },

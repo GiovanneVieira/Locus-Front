@@ -64,10 +64,11 @@ export default function AddressesPage() {
   }, [debouncedQuery, debouncedCity, debouncedState, debouncedCountry, page, setSearchParams])
 
   const { data, isFetching, isLoading, isError, error } = useAddresses(params)
-
   const addresses = data?.content ?? []
+  console.log(addresses)
   const totalPages = data?.totalPages ?? 0
   const totalElements = data?.totalElements ?? 0
+
 
   function clearFilters() {
     setQuery("")

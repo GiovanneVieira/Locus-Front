@@ -158,7 +158,7 @@ function buildQueryString(params: Record<string, unknown> | undefined) {
 
 export async function fetchAddresses(params?: AddressSearchParams) {
   const qs = buildQueryString(params as Record<string, unknown>)
-  return request<PagedResponse<Address>>(`/addresses${qs}`)
+  return request<PagedResponse<Address>>(`/address/rentable${qs}`)
 }
 
 export async function fetchMyAddresses() {
@@ -171,6 +171,13 @@ export async function fetchAddressById(id: string) {
 
 export async function createAddress(payload: CreateAddressPayload) {
   return request<Address>("/addresses", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createRentableAddress(payload: CreateAddressPayload) {
+  return request<Address>("/address/rentable", {
     method: "POST",
     body: JSON.stringify(payload),
   })
