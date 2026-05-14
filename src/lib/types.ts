@@ -76,7 +76,7 @@ export interface UserSession {
   role: UserRole | string
   phone?: string | null
   bio?: string | null
-  avatarUrl?: string | null
+  pfpUrl?: string | null
   host?: boolean
   createdAt: string
   updatedAt: string | null
@@ -86,7 +86,7 @@ export interface UpdateUserPayload {
   name?: string
   phone?: string | null
   bio?: string | null
-  avatarUrl?: string | null
+  pfpUrl?: string | null
 }
 
 export interface Address {

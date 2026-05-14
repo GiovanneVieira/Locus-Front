@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import { useForm } from "@tanstack/react-form"
 import {
@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const updateMutation = useUpdateCurrentUser()
   const logoutMutation = useLogout()
   const { data: myAddresses } = useMyAddresses()
-
+  
   const [feedback, setFeedback] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
 
@@ -33,7 +33,7 @@ export default function ProfilePage() {
       name: user?.name ?? "",
       phone: user?.phone ?? "",
       bio: user?.bio ?? "",
-      avatarUrl: user?.avatarUrl ?? "",
+      pfpUrl: user?.pfpUrl ?? "",
     },
     onSubmit: async ({ value }) => {
       setFeedback(null)
@@ -42,7 +42,7 @@ export default function ProfilePage() {
           name: value.name,
           phone: value.phone || null,
           bio: value.bio || null,
-          avatarUrl: value.avatarUrl || null,
+          pfpUrl: value.pfpUrl || null,
         })
         setIsEditing(false)
         setFeedback("Perfil atualizado com sucesso.")
@@ -60,7 +60,7 @@ export default function ProfilePage() {
         name: user.name ?? "",
         phone: user.phone ?? "",
         bio: user.bio ?? "",
-        avatarUrl: user.avatarUrl ?? "",
+        pfpUrl: user.pfpUrl ?? "",
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,9 +102,9 @@ export default function ProfilePage() {
 
           <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             <div className="relative">
-              {user.avatarUrl ? (
+              {user.pfpUrl ? (
                 <img
-                  src={user.avatarUrl}
+                  src={user.pfpUrl}
                   alt={user.name}
                   className="size-20 rounded-2xl border border-border object-cover"
                 />
@@ -236,7 +236,7 @@ export default function ProfilePage() {
                 )}
               </form.Field>
 
-              <form.Field name="avatarUrl">
+              <form.Field name="pfpUrl">
                 {(field) => (
                   <label className="flex flex-col gap-1.5">
                     <span className="text-xs font-medium text-muted-foreground">URL do avatar</span>

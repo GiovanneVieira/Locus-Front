@@ -81,7 +81,7 @@ export default function Header() {
   }
 
   const host = isHost(user)
-  const isAdmin = (user?.role ?? "").toString().toUpperCase() === "ADMIN"
+  const isAdmin = (user?.role ?? "").toString().toUpperCase() === "ROLE_ADMIN"
 
   return (
     <header className="header-glow-line sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-2xl">
@@ -137,9 +137,9 @@ export default function Header() {
                 aria-haspopup="menu"
                 aria-expanded={userMenuOpen}
               >
-                {user.avatarUrl ? (
+                {user.pfpUrl ? (
                   <img
-                    src={user.avatarUrl}
+                    src={user.pfpUrl}
                     alt={user.name}
                     className="size-8 rounded-full border border-border object-cover"
                   />
