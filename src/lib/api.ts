@@ -138,7 +138,7 @@ export async function updateCurrentUser(payload: UpdateUserPayload) {
 }
 
 export async function becomeHost() {
-  return request<UserSession>("/user/become-host", { method: "POST" })
+  return request<UserSession>("/user/become-host", { method: "PATCH" })
 }
 
 /* ========== Addresses (public) ========== */

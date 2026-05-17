@@ -80,6 +80,8 @@ export default function Header() {
     navigate("/", { replace: true })
   }
 
+
+  console.log(user?.pfpUrl)
   const host = isHost(user)
   const isAdmin = (user?.role ?? "").toString().toUpperCase() === "ROLE_ADMIN"
 
@@ -180,7 +182,7 @@ export default function Header() {
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
                       >
-                        <MapPin size={16} /> Meus Hospedagens
+                        <MapPin size={16} /> Minhas Hospedagens
                       </Link>
                       <Link
                         to="/enderecos/novo"
