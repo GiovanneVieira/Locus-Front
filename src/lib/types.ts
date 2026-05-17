@@ -89,6 +89,10 @@ export interface UpdateUserPayload {
   pfpUrl?: string | null
 }
 
+export interface ActivateUserPayload{
+  email: string
+}
+
 export interface Address {
   id: string
   title: string
@@ -158,6 +162,23 @@ export interface PagedResponse<T> {
   size: number
   totalElements: number
   totalPages: number
+}
+
+/* =========================
+            OTP
+  ========================= */
+export interface SendOtpPayload {
+  email: string
+  username: string
+}
+
+export interface VerifyOtpPayload {
+  otpCode: string
+  email: string
+}
+
+export interface OtpResponse {
+  message: string
 }
 
 /* =========================

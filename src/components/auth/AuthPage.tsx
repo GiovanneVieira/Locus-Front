@@ -61,7 +61,7 @@ const AuthPage = () => {
         </div>
 
         <div className="relative min-h-[300px]">
-          {currentCard === "login" ? <Login /> : <Register />}
+        {currentCard === "login" ? <Login /> : <Register />}
         </div>
       </div>
     </div>

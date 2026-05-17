@@ -1,4 +1,5 @@
 import type {
+  ActivateUserPayload,
   Address,
   AddressSearchParams,
   AdminAuditEntry,
@@ -9,11 +10,14 @@ import type {
   AuthResponse,
   ChangeUserRolePayload,
   CreateAddressPayload,
+  OtpResponse,
   PagedResponse,
   RegisterPayload,
+  SendOtpPayload,
   UpdateAddressPayload,
   UpdateUserPayload,
   UserSession,
+  VerifyOtpPayload,
 } from "@/lib/types"
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
@@ -112,7 +116,7 @@ export async function login(payload: AuthPayload) {
   )
 }
 
-export async function register(payload: RegisterPayload) {
+export async function preRegister(payload: RegisterPayload) {
   return request<AuthResponse>(
     "/auth/register",
     { method: "POST", body: JSON.stringify(payload) },
@@ -123,6 +127,25 @@ export async function register(payload: RegisterPayload) {
 export async function logout() {
   return request<{ message: string }>("/auth/logout", { method: "POST" }, false)
 }
+
+/* ========== OTP ========== */
+export async function sendOtp(payload: SendOtpPayload) {
+  return request<OtpResponse>("/otp/send", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }, false) // false desabilita o retryOnUnauthorized para rotas públicas de auth
+}
+
+/**
+ * Valida se o código inserido pelo usuário corresponde ao enviado por e-mail
+ */
+export async function validateOtp(payload: VerifyOtpPayload) {
+  return request<OtpResponse>("/otp/validate", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }, false)
+}
+
 
 /* ========== User ========== */
 
@@ -139,6 +162,10 @@ export async function updateCurrentUser(payload: UpdateUserPayload) {
 
 export async function becomeHost() {
   return request<UserSession>("/user/become-host", { method: "PATCH" })
+}
+
+export async function enableUser(payload: ActivateUserPayload) {
+  return request<ActivateUserPayload>("/user/enable", { method: "POST" , body: JSON.stringify(payload)})
 }
 
 /* ========== Addresses (public) ========== */

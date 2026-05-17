@@ -80,8 +80,6 @@ export default function Header() {
     navigate("/", { replace: true })
   }
 
-
-  console.log(user?.pfpUrl)
   const host = isHost(user)
   const isAdmin = (user?.role ?? "").toString().toUpperCase() === "ROLE_ADMIN"
 

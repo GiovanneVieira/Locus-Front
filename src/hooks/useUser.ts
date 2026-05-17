@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { becomeHost, updateCurrentUser } from "@/lib/api"
-import type { UpdateUserPayload } from "@/lib/types"
+import { becomeHost, enableUser, updateCurrentUser } from "@/lib/api"
+import type { ActivateUserPayload, UpdateUserPayload } from "@/lib/types"
 import { authKeys } from "@/hooks/useAuth"
 
 export function useUpdateCurrentUser() {
@@ -24,5 +24,11 @@ export function useBecomeHost() {
       await queryClient.invalidateQueries({ queryKey: authKeys.currentUser })
       await queryClient.invalidateQueries({ queryKey: ["addresses"] })
     },
+  })
+}
+
+export function useEnableUser(){
+  return useMutation({
+    mutationFn: (payload: ActivateUserPayload) => enableUser(payload)
   })
 }
