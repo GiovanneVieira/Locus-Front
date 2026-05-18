@@ -192,8 +192,12 @@ export async function fetchMyAddresses() {
   return request<Address[]>("/address/rentable/me")
 }
 
-export async function fetchAddressById(id: string) {
+export async function fetchAddressByUserId(id: string) {
   return request<Address>(`/address/rentable/user/${id}`)
+}
+
+export async function fetchAddressById(id: string) {
+  return request<Address>(`/address/rentable/${id}`)
 }
 
 export async function createAddress(payload: CreateAddressPayload) {

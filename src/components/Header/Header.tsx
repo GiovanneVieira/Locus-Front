@@ -48,6 +48,8 @@ export default function Header() {
 
   const alternarTema = () => setTheme(theme === "dark" ? "light" : "dark")
 
+  console.log(`Current user: ${JSON.stringify(user)}`)
+
   useEffect(() => {
     if (!userMenuOpen) return
     function handleClick(event: MouseEvent) {

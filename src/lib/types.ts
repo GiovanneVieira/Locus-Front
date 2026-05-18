@@ -132,6 +132,7 @@ export interface CreateAddressPayload {
   state: string
   country: string
   zipCode: string
+  type: "PERSONAL" | "RENTABLE"
   latitude?: number | null
   longitude?: number | null
   pricePerNight?: number | null

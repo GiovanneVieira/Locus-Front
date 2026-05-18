@@ -155,6 +155,7 @@ export default function NewAddressPage() {
           description: value.description.trim() || null,
           street: value.street.trim(),
           number: value.number.trim(),
+          type: "RENTABLE",
           complement: value.complement.trim() || null,
           neighborhood: value.neighborhood.trim(),
           city: value.city.trim(),
