@@ -28,6 +28,7 @@ import { ApiError } from "@/lib/api"
 import { getAmenityLabel } from "@/components/forms/AmenitySelector"
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog"
 import { useToast } from "@/components/feedback/ToastProvider"
+import {StreetView} from "@/components/StreetViewContainer.tsx";
 
 function formatPrice(value: number | null | undefined) {
   if (value === null || value === undefined) return null
@@ -342,6 +343,7 @@ export default function AddressDetailsPage() {
           setConfirmOpen(false)
         }}
       />
+      <StreetView/>
     </div>
   )
 }
