@@ -2,9 +2,11 @@ import { useEffect, useRef } from 'react';
 
 export function StreetView() {
     const divRef = useRef<HTMLDivElement>(null);
+    const apiKey = import.meta.env.VITE_STREET_VIEW_API_KEY
+    console.log(apiKey)
 
     useEffect(() => {
-        const apiKey = "AIzaSyB9QI0kcQLaE0SCfq1Z1XL5L82TnyzOjlE";
+
 
         // Verifica se o script já existe para não carregar duplicado
         if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
