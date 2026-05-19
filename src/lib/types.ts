@@ -157,6 +157,12 @@ export interface AddressSearchParams {
   size?: number
 }
 
+export interface ImageDetailsResponse {
+  id: string; //
+  originalName: string;
+  s3Key: string;
+}
+
 export interface PagedResponse<T> {
   content: T[]
   page: number

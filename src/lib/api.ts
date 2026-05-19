@@ -10,6 +10,7 @@ import type {
   AuthResponse,
   ChangeUserRolePayload,
   CreateAddressPayload,
+  ImageDetailsResponse,
   OtpResponse,
   PagedResponse,
   RegisterPayload,
@@ -251,6 +252,28 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   const data = (await response.json()) as { urls?: string[] } | string[]
   if (Array.isArray(data)) return data
   return data.urls ?? []
+}
+
+export async function uploadRentableAddressImages(files: File[], hostId: string): Promise<ImageDetailsResponse[]> {
+  if (files.length === 0) return [];
+
+  const formData = new FormData();
+  files.forEach((file) => formData.append("files", file));
+
+  // CORREÇÃO 1: Rota ajustada para bater com o @RequestMapping("/s3/rentable-address/image/upload")
+  const response = await fetch(`${API_BASE_URL}/s3/rentable-address/image/upload?hostId=${hostId}`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const message = await parseErrorMessage(response, "Falha ao enviar imagens");
+    throw new ApiError(message, response.status);
+  }
+
+  // CORREÇÃO 2: O backend agora retorna a lista de objetos ricos diretamente, sem nós intermediários
+  return (await response.json()) as ImageDetailsResponse[];
 }
 
 /* ========== Admin ========== */

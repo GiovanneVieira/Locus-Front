@@ -171,6 +171,7 @@ export default function NewAddressPage() {
           availableTo: value.availableTo || null,
         }
 
+        console.log(`Payload from address form:\n${JSON.stringify(payload)}`)
         const created = await createMutation.mutateAsync(payload)
         toast.success("Endereço publicado", `"${payload.title}" já está no catálogo do Locus.`)
         navigate(`/enderecos/${created.id}`, { replace: true })

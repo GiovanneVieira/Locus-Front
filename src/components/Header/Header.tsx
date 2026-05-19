@@ -45,7 +45,7 @@ export default function Header() {
     const pagina = navegacao.find((item) => item.rota === location.pathname)
     return pagina?.nome ?? "Locus"
   }, [location.pathname])
-
+  
   const alternarTema = () => setTheme(theme === "dark" ? "light" : "dark")
 
   console.log(`Current user: ${JSON.stringify(user)}`)

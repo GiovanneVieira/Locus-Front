@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
-  createAddress,
   createRentableAddress,
   deleteAddress,
   fetchAddressById,
@@ -9,6 +8,7 @@ import {
   fetchMyAddresses,
   updateAddress,
   uploadImages,
+  uploadRentableAddressImages,
 } from "@/lib/api"
 import type {
   AddressSearchParams,
@@ -84,6 +84,14 @@ export function useDeleteAddress() {
 /**
  * SCRUM-126 — Upload de imagens do imóvel (devolve URLs públicas no S3).
  */
+
+export function useUploadRentableAddressImages() {
+  return useMutation({
+    mutationFn: ({ files, hostId }: { files: File[]; hostId: string }) =>
+      uploadRentableAddressImages(files, hostId),
+  })
+}
+
 export function useUploadAddressImages() {
   return useMutation({
     mutationFn: (files: File[]) => uploadImages(files),
