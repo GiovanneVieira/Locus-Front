@@ -87,8 +87,7 @@ export function useDeleteAddress() {
 
 export function useUploadRentableAddressImages() {
   return useMutation({
-    mutationFn: ({ files, hostId }: { files: File[]; hostId: string }) =>
-      uploadRentableAddressImages(files, hostId),
+    mutationFn: (files: File[]) => uploadRentableAddressImages(files),
   })
 }
 

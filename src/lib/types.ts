@@ -123,25 +123,29 @@ export interface Address {
 
 export interface CreateAddressPayload {
   title: string
-  description?: string | null
   street: string
   number: string
-  complement?: string | null
   neighborhood: string
   city: string
   state: string
   country: string
   zipCode: string
   type: "PERSONAL" | "RENTABLE"
-  latitude?: number | null
-  longitude?: number | null
+  
+  imageIds: string[]          // Array de UUIDs das imagens órfãs prontas para adoção
+  mainImageId?: string        // ID da imagem escolhida para ser a capa do card
+
+  // ---- CAMPOS OPCIONAIS / NEGÓCIO DE LOCAÇÃO ----
+  description?: string | null
+  complement?: string | null
   pricePerNight?: number | null
   maxGuests?: number | null
-  coverImageUrl?: string | null
-  imageUrls?: string[]
   amenities?: string[]
   availableFrom?: string | null
   availableTo?: string | null
+  latitude?: number | null
+  longitude?: number | null
+
 }
 
 export type UpdateAddressPayload = Partial<CreateAddressPayload>

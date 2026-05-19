@@ -18,9 +18,9 @@ import { AmenitySelector } from "@/components/forms/AmenitySelector"
 import { ImageUploader, type UploaderImage } from "@/components/forms/ImageUploader"
 import { AddressPreviewCard } from "@/components/AddressPreviewCard"
 
-import { useCreateAddress, useUploadAddressImages } from "@/hooks/useAddresses"
+import { useCreateAddress, useUploadRentableAddressImages } from "@/hooks/useAddresses"
 import { ApiError } from "@/lib/api"
-import type { CreateAddressPayload } from "@/lib/types"
+import type { CreateAddressPayload, ImageDetailsResponse } from "@/lib/types"
 
 interface FormValues {
   title: string
@@ -38,6 +38,8 @@ interface FormValues {
   availableFrom: string
   availableTo: string
   amenities: string[]
+  latitude: string   // Corrigido: Adicionado para evitar erro no onSubmit
+  longitude: string  // Corrigido: Adicionado para evitar erro no onSubmit
 }
 
 const defaultValues: FormValues = {
@@ -56,6 +58,8 @@ const defaultValues: FormValues = {
   availableFrom: "",
   availableTo: "",
   amenities: [],
+  latitude: "",      // Corrigido: Inicializado como string vazia para o formulário
+  longitude: "",     // Corrigido: Inicializado como string vazia para o formulário
 }
 
 /* ============================
@@ -99,7 +103,7 @@ export default function NewAddressPage() {
   const navigate = useNavigate()
   const toast = useToast()
   const createMutation = useCreateAddress()
-  const uploadMutation = useUploadAddressImages()
+  const uploadMutation = useUploadRentableAddressImages()
 
   const [images, setImages] = useState<UploaderImage[]>([])
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -117,39 +121,37 @@ export default function NewAddressPage() {
       }
 
       try {
-        // 1) Upload das imagens novas (as remotas já têm URL pública)
-        let uploadedUrls: string[] = []
+        // 1) FASE 1: Isolar e fazer upload apenas das imagens locais (novas)
+        let uploadedImages: ImageDetailsResponse[] = []
         const filesToUpload = images
-          .map((image) => (image.file ? image.file : null))
+          .map((image) => image.file ?? null)
           .filter((file): file is File => file !== null)
 
         if (filesToUpload.length > 0) {
-          uploadedUrls = await uploadMutation.mutateAsync(filesToUpload)
-          if (uploadedUrls.length !== filesToUpload.length) {
-            throw new Error("Upload incompleto: quantidade de URLs diferente da quantidade de arquivos.")
+          uploadedImages = await uploadMutation.mutateAsync(filesToUpload)
+          
+          if (uploadedImages.length !== filesToUpload.length) {
+            throw new Error("Upload incompleto: quantidade de registros diferente da quantidade de arquivos.")
           }
         }
 
-        const remoteUrls = images
-          .filter((image) => image.remote)
-          .map((image) => image.url)
-
-        // Mantém a ordem (capa primeiro)
-        const allImageUrls: string[] = []
+        // 2) Consolidar a lista de IDs (UUIDs) mantendo a ordenação da galeria
+        const allImageIds: string[] = []
         let uploadIdx = 0
-        let remoteIdx = 0
+
         for (const image of images) {
           if (image.remote) {
-            allImageUrls.push(remoteUrls[remoteIdx++])
+            if (image.id) allImageIds.push(image.id)
           } else {
-              const nextUploadedUrl = uploadedUrls[uploadIdx++]
-              if (!nextUploadedUrl) {
+            const nextUploaded = uploadedImages[uploadIdx++]
+            if (!nextUploaded) {
               throw new Error("Falha ao montar lista de imagens publicadas.")
-              }
-              allImageUrls.push(nextUploadedUrl)
-           }
+            }
+            allImageIds.push(nextUploaded.id)
+          }
         }
-        
+
+        // 3) FASE 2: Montar o payload limpo mapeando os tipos primitivos corretamente
         const payload: CreateAddressPayload = {
           title: value.title.trim(),
           description: value.description.trim() || null,
@@ -164,17 +166,24 @@ export default function NewAddressPage() {
           zipCode: value.zipCode.trim(),
           pricePerNight: value.pricePerNight ? Number(value.pricePerNight) : null,
           maxGuests: value.maxGuests ? Number(value.maxGuests) : null,
-          coverImageUrl: allImageUrls[0] ?? null,
-          imageUrls: allImageUrls,
           amenities: value.amenities,
           availableFrom: value.availableFrom || null,
           availableTo: value.availableTo || null,
+          latitude: value.latitude ? Number(value.latitude) : null,
+          longitude: value.longitude ? Number(value.longitude) : null,
+          
+          // Vincula os identificadores gerados na Fase 1
+          imageIds: allImageIds,
+          mainImageId: allImageIds[0] || undefined
         }
 
-        console.log(`Payload from address form:\n${JSON.stringify(payload)}`)
+        console.log(`Payload enviado para a Fase 2:\n${JSON.stringify(payload)}`)
+        
         const created = await createMutation.mutateAsync(payload)
-        toast.success("Endereço publicado", `"${payload.title}" já está no catálogo do Locus.`)
+        
+        toast.success("Anúncio publicado", `"${payload.title}" já está no catálogo do Locus.`)
         navigate(`/enderecos/${created.id}`, { replace: true })
+
       } catch (error) {
         const message =
           error instanceof ApiError
@@ -227,6 +236,7 @@ export default function NewAddressPage() {
         <form
           onSubmit={(event) => {
             event.preventDefault()
+            event.stopPropagation()
             form.handleSubmit()
           }}
           className="grid gap-6 lg:grid-cols-[1.45fr_1fr] lg:items-start"
@@ -377,7 +387,6 @@ export default function NewAddressPage() {
                       <Input
                         value={field.state.value}
                         onChange={(event) => {
-                          // Auto-formata 12345678 -> 12345-678
                           const onlyDigits = event.target.value.replace(/\D/g, "").slice(0, 8)
                           const formatted =
                             onlyDigits.length > 5

@@ -6,6 +6,11 @@ const MAX_SIZE_MB = 5
 const ACCEPTED = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
 
 export interface UploaderImage {
+  /** 
+   * O ID (UUID) gerado pelo banco relacional.
+   * Presente para imagens já hospedadas (remote: true) ou preenchido logo após o upload da Fase 1.
+   */
+  id?: string
   /** URL local (blob:) ou URL pública já no S3 */
   url: string
   /** Arquivo cru, presente apenas para imagens ainda não enviadas */

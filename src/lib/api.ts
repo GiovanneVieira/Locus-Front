@@ -254,16 +254,16 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   return data.urls ?? []
 }
 
-export async function uploadRentableAddressImages(files: File[], hostId: string): Promise<ImageDetailsResponse[]> {
+export async function uploadRentableAddressImages(files: File[]): Promise<ImageDetailsResponse[]> {
   if (files.length === 0) return [];
 
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 
-  // CORREÇÃO 1: Rota ajustada para bater com o @RequestMapping("/s3/rentable-address/image/upload")
-  const response = await fetch(`${API_BASE_URL}/s3/rentable-address/image/upload?hostId=${hostId}`, {
+  // Rota limpa, sem query parameters expostos
+  const response = await fetch(`${API_BASE_URL}/s3/rentable-address/image/upload`, {
     method: "POST",
-    credentials: "include",
+    credentials: "include", // Garante o envio de cookies/tokens se houver
     body: formData,
   });
 
@@ -272,7 +272,6 @@ export async function uploadRentableAddressImages(files: File[], hostId: string)
     throw new ApiError(message, response.status);
   }
 
-  // CORREÇÃO 2: O backend agora retorna a lista de objetos ricos diretamente, sem nós intermediários
   return (await response.json()) as ImageDetailsResponse[];
 }
 
