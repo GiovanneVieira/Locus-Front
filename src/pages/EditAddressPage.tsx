@@ -310,7 +310,7 @@ export default function EditAddressPage() {
                 mainImageId: allImageIds[0] || undefined,
             };
 
-            console.log(`Payload de Edição enviado ao Spring Boot:\n${JSON.stringify(payload)}`);
+            // console.log(`Payload de Edição enviado ao Spring Boot:\n${JSON.stringify(payload)}`);
 
             await updateMutation.mutateAsync(payload);
             toast.success(

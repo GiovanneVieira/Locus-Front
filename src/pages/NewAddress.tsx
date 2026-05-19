@@ -223,9 +223,9 @@ export default function NewAddressPage() {
                 // 3) FASE EXTRA: Chamar o Google Geocoding em background de forma transparente
                 const coordinates = await fetchCoordinates(value);
 
-                console.log(
-                    `coordinates ${JSON.stringify(coordinates)}`,
-                );
+                // console.log(
+                //     `coordinates ${JSON.stringify(coordinates)}`,
+                // );
                 // 4) FASE 2: Montar payload final incluindo o tipo polimórfico e as coordenadas
                 const payload: CreateAddressPayload = {
                     type: 'RENTABLE', // Informa o discriminador para o @JsonSubTypes do Jackson
@@ -257,9 +257,9 @@ export default function NewAddressPage() {
                     mainImageId: allImageIds[0] || undefined,
                 };
 
-                console.log(
-                    `Payload enviado para o Spring Boot:\n${JSON.stringify(payload)}`,
-                );
+                // console.log(
+                //     `Payload enviado para o Spring Boot:\n${JSON.stringify(payload)}`,
+                // );
 
                 const created =
                     await createMutation.mutateAsync(payload);
