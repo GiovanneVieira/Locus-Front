@@ -43,7 +43,6 @@ export default function AddressDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: address, isLoading, isError, error } = useAddress(id)
-  console.log("DADOS QUE VIERAM DO JAVA:", address)
   const { data: currentUser } = useCurrentUser()
   const deleteMutation = useDeleteAddress()
   const toast = useToast()
