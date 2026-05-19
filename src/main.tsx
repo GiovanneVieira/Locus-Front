@@ -22,4 +22,5 @@ createRoot(document.getElementById("root")!).render(
       </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>
+
 )

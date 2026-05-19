@@ -282,7 +282,15 @@ export default function AddressDetailsPage() {
                 ) : null}
               </div>
             </article>
-          </div>
+
+
+          {/* AQUI ENTRA O SEU MAPA: Juntando os dados do Java e enviando pro componente */}
+          {/* MAPA AQUI: Cuidado para não apagar a barra final '/>' no StreetView */}
+          <StreetView
+              address={`${address.street}, ${address.neighborhood}, ${address.city} - ${address.state}, ${address.country}`}
+          />
+
+          </div> {/* <-- ESSA DIV É CRUCIAL. Ela fecha a coluna da esquerda! */}
 
           {/* Aside */}
           <aside className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5 shadow-sm lg:sticky lg:top-24">
@@ -343,7 +351,7 @@ export default function AddressDetailsPage() {
           setConfirmOpen(false)
         }}
       />
-      <StreetView/>
+
     </div>
   )
 }
