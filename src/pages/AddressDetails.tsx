@@ -43,6 +43,7 @@ export default function AddressDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: address, isLoading, isError, error } = useAddress(id)
+  console.log("DADOS QUE VIERAM DO JAVA:", address)
   const { data: currentUser } = useCurrentUser()
   const deleteMutation = useDeleteAddress()
   const toast = useToast()
@@ -98,11 +99,25 @@ export default function AddressDetailsPage() {
   }
 
   const price = formatPrice(address.pricePerNight)
-  const images = address.imageUrls && address.imageUrls.length > 0
-    ? address.imageUrls
-    : address.coverImageUrl
-      ? [address.coverImageUrl]
-      : []
+
+
+  const listaDeImagens = address.imageUrls || (address as any).imageIds || []
+  const imagemCapa = address.coverImageUrl || (address as any).mainImageId
+
+  const rawImages = listaDeImagens.length > 0
+      ? listaDeImagens
+      : imagemCapa
+          ? [imagemCapa]
+          : []
+
+  // Transformamos o UUID em link real para o HTML desenhar a foto
+  // ATENÇÃO: Substitua essa URL abaixo pelo link base correto do seu bucket S3!
+  const BASE_S3_URL = "https://locusapi-bucket.s3.amazonaws.com/"
+
+  const images = rawImages.map((img: string) =>
+      img.startsWith("http") ? img : `${BASE_S3_URL}${img}`
+  )
+
   const cover = images[activeImage]
 
   return (
@@ -282,8 +297,15 @@ export default function AddressDetailsPage() {
                 ) : null}
               </div>
             </article>
-          </div>
 
+
+          {/* O MAPA ENTRA AQUI, DENTRO DA COLUNA DA ESQUERDA */}
+            {/* O MAPA ENTRA AQUI, DENTRO DA COLUNA DA ESQUERDA */}
+            <StreetView
+                address={`${address.street}, ${address.neighborhood}, ${address.city} - ${address.state}, ${address.country}`}
+            />
+
+          </div>
           {/* Aside */}
           <aside className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-5 shadow-sm lg:sticky lg:top-24">
             <div>
@@ -343,7 +365,6 @@ export default function AddressDetailsPage() {
           setConfirmOpen(false)
         }}
       />
-      <StreetView/>
     </div>
   )
 }

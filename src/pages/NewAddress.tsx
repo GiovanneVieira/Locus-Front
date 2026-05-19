@@ -135,6 +135,7 @@ export default function NewAddressPage() {
           .map((image) => image.url)
 
         // Mantém a ordem (capa primeiro)
+        // Mantém a ordem (capa primeiro)
         const allImageUrls: string[] = []
         let uploadIdx = 0
         let remoteIdx = 0
@@ -142,15 +143,22 @@ export default function NewAddressPage() {
           if (image.remote) {
             allImageUrls.push(remoteUrls[remoteIdx++])
           } else {
-              const nextUploadedUrl = uploadedUrls[uploadIdx++]
-              if (!nextUploadedUrl) {
+            const nextUploadedUrl = uploadedUrls[uploadIdx++]
+            if (!nextUploadedUrl) {
               throw new Error("Falha ao montar lista de imagens publicadas.")
-              }
-              allImageUrls.push(nextUploadedUrl)
-           }
+            }
+            allImageUrls.push(nextUploadedUrl)
+          }
         }
-        
-        const payload: CreateAddressPayload = {
+
+// ✨ NOVO TRUQUE: Pegamos apenas o código UUID da imagem para o Java ficar feliz
+        const extractUUID = (texto: string) => {
+          const match = texto.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+          return match ? match[0] : texto;
+        };
+        const uuidsDasFotos = allImageUrls.map(extractUUID);
+
+        const payload = {
           title: value.title.trim(),
           description: value.description.trim() || null,
           street: value.street.trim(),
@@ -164,12 +172,15 @@ export default function NewAddressPage() {
           zipCode: value.zipCode.trim(),
           pricePerNight: value.pricePerNight ? Number(value.pricePerNight) : null,
           maxGuests: value.maxGuests ? Number(value.maxGuests) : null,
-          coverImageUrl: allImageUrls[0] ?? null,
-          imageUrls: allImageUrls,
+
+          // ✨ A MÁGICA ACONTECE AQUI: Usando os nomes EXATOS que o Java DTO pediu!
+          mainImageId: uuidsDasFotos[0] ?? null,
+          imageIds: uuidsDasFotos,
+
           amenities: value.amenities,
           availableFrom: value.availableFrom || null,
           availableTo: value.availableTo || null,
-        }
+        } as any // O "as any" evita erros de tipagem no TypeScript
 
         const created = await createMutation.mutateAsync(payload)
         toast.success("Endereço publicado", `"${payload.title}" já está no catálogo do Locus.`)

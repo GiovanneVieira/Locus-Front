@@ -1,53 +1,61 @@
 import { useEffect, useRef } from 'react';
 
-export function StreetView() {
+// 1. Tipagem para receber o endereço do formulário
+interface StreetViewProps {
+    address: string;
+}
+
+export function StreetView({ address }: StreetViewProps) {
     const divRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const apiKey = "AIzaSyB9QI0kcQLaE0SCfq1Z1XL5L82TnyzOjlE";
+    // 2. Chave fixa para não dar tela branca (depois você volta pro .env se quiser)
+    const apiKey = "AIzaSyB9QI0kcQLaE0SCfq1Z1XL5L82TnyzOjlE";
 
-        // Verifica se o script já existe para não carregar duplicado
+    useEffect(() => {
+        // Se ainda não tiver endereço, não faz a busca
+        if (!address) return;
+
+        // Verifica se o script do Google já existe
         if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
             const script = document.createElement('script');
-// Use crases ` ` para que o ${apiKey} funcione
             script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap&v=weekly`;
             script.async = true;
             document.head.appendChild(script);
         }
 
-        // Função global de callback que o Google chama
+        // Função global de inicialização
         (window as any).initMap = () => {
             if (divRef.current && window.google) {
-                new window.google.maps.StreetViewPanorama(divRef.current, {
-                    position: { lat: -23.5505, lng: -46.6333 },
-                    pov: { heading: 100, pitch: 0 },
+                const geocoder = new window.google.maps.Geocoder();
+
+                // Pega a string do endereço e converte em Lat/Lng
+                geocoder.geocode({ address: address }, (results, status) => {
+                    if (status === 'OK' && results && results[0]) {
+                        new window.google.maps.StreetViewPanorama(divRef.current!, {
+                            position: results[0].geometry.location,
+                            pov: { heading: 100, pitch: 0 },
+                        });
+                    } else {
+                        console.error('Falha ao encontrar endereço: ' + status);
+                    }
                 });
             }
         };
 
-        // Caso o google já esteja carregado (hot reload)
+        // Se o Google já estiver carregado, roda direto
         if (window.google && window.google.maps) {
             (window as any).initMap();
         }
-    }, []);
+    }, [address]); // Recarrega se o endereço mudar
 
+    // 3. Visual com Tailwind para não ficar achatado
     return (
-        <div style={{
-            padding: '40px 20px',
-            maxWidth: '1200px', // Ajuste para alinhar com o topo do seu site
-            margin: '0 auto'
-        }}>
-            <h3 style={{ color: 'white', marginBottom: '15px' }}>Localização</h3>
+        <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold mb-4">Localização</h2>
             <div
                 ref={divRef}
-                style={{
-                    width: '100%',
-                    height: '400px',
-                    borderRadius: '12px', // Para combinar com os cards arredondados lá de cima
-                    overflow: 'hidden',
-                    border: '1px solid #333'
-                }}
+                className="w-full h-[400px] rounded-2xl overflow-hidden border border-border"
             />
-        </div>
+        </article>
     );
 }

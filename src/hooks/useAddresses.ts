@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
+
 import {
   createAddress,
   createRentableAddress,
@@ -86,6 +87,7 @@ export function useDeleteAddress() {
  */
 export function useUploadAddressImages() {
   return useMutation({
+    // Usamos a função nativa que o seu projeto já tem pronta e configurada com Cookies!
     mutationFn: (files: File[]) => uploadImages(files),
   })
 }
