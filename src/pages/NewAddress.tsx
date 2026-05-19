@@ -53,8 +53,8 @@ interface FormValues {
     availableFrom: string;
     availableTo: string;
     amenities: string[];
-    latitude: string; 
-    longitude: string; 
+    latitude: string;
+    longitude: string;
 }
 
 const defaultValues: FormValues = {
@@ -73,8 +73,8 @@ const defaultValues: FormValues = {
     availableFrom: '',
     availableTo: '',
     amenities: [],
-    latitude: '', 
-    longitude: '', 
+    latitude: '',
+    longitude: '',
 };
 
 /* ============================
@@ -89,7 +89,8 @@ function requireText(value: string, label: string) {
 // ... (suas outras funções de validação pura permanecem intocadas)
 function validateState(value: string) {
     if (!value || !value.trim()) return 'Estado é obrigatório';
-    if (value.trim().length !== 2) return 'Use a sigla com 2 letras (ex.: SP)';
+    if (value.trim().length !== 2)
+        return 'Use a sigla com 2 letras (ex.: SP)';
     return undefined;
 }
 
@@ -111,7 +112,8 @@ function validateDateRange(from: string, to: string) {
     if (!from && !to) return undefined;
     if (from && !to) return 'Informe a data final';
     if (!from && to) return 'Informe a data inicial';
-    if (new Date(to) < new Date(from)) return 'A data final precisa vir depois da inicial';
+    if (new Date(to) < new Date(from))
+        return 'A data final precisa vir depois da inicial';
     return undefined;
 }
 
@@ -122,45 +124,56 @@ export default function NewAddressPage() {
     const uploadMutation = useUploadRentableAddressImages();
 
     const [images, setImages] = useState<UploaderImage[]>([]);
-    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(
+        null,
+    );
 
-
-    // 🌟 FASE EXTRA: Função para buscar as coordenadas na API v4 do Google Maps de forma limpa
+    // Função para buscar as coordenadas na API v4 do Google Maps de forma limpa
     const fetchCoordinates = async (value: FormValues): Promise<{ lat: number; lng: number } | null> => {
-        try {
-            // Concatena os campos na ordem postal brasileira ideal para evitar ambiguidades no mapa
-            const addressString = `${value.street}, ${value.number} - ${value.neighborhood}, ${value.city} - ${value.state}, ${value.zipCode}`;
-            
-            // Converte espaços e caracteres especiais para o padrão seguro de URL
-            const encodedAddress = encodeURIComponent(addressString.trim());
-            const url = `https://geocode.googleapis.com/v4/geocode/address/${encodedAddress}?key=${import.meta.env.VITE_GOOGLE_API_KEY}&regionCode=BR`;
+    try {
+        // Concatena os campos na ordem postal brasileira ideal
+        const addressString = `${value.street}, ${value.number} - ${value.neighborhood}, ${value.city} - ${value.state}, ${value.zipCode}`;
+        
+        // Converte para o padrão seguro de URL
+        const encodedAddress = encodeURIComponent(addressString.trim());
+        const url = `https://geocode.googleapis.com/v4/geocode/address/${encodedAddress}?key=${import.meta.env.VITE_GOOGLE_API_KEY}&regionCode=BR`;
 
-            const response = await fetch(url);
-            if (!response.ok) return null;
-
-            const data = await response.json();
-            
-            // Analisa a estrutura de resposta da v4 (localiza o objeto de geometria contendo lat/lng)
-            const location = data.geocodedAddresses?.[0]?.geometry?.location;
-            if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
-                return {
-                    lat: location.latitude,
-                    lng: location.longitude
-                };
-            }
-            return null;
-        } catch (e) {
-            console.error('Falha ao tentar geocodificar o endereço informado:', e);
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error(`Erro HTTP na Geocoding API: ${response.status}`);
             return null;
         }
-    };
+
+        const data = await response.json();
+        
+        // Acessa a raiz correta 'results' exposta pela v4
+        const firstResult = data.results?.[0];
+        const location = firstResult?.location;
+
+        if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
+            return {
+                lat: location.latitude,
+                lng: location.longitude
+            };
+        }
+        
+        console.warn("Nenhum local válido ou coordenadas encontradas para o endereço informado.");
+        return null;
+    } catch (e) {
+        console.error('Falha ao tentar geocodificar o endereço informado:', e);
+        return null;
+    }
+};
 
     const form = useForm({
         defaultValues,
         onSubmit: async ({ value }) => {
             setSubmitError(null);
 
-            const dateError = validateDateRange(value.availableFrom, value.availableTo);
+            const dateError = validateDateRange(
+                value.availableFrom,
+                value.availableTo,
+            );
             if (dateError) {
                 setSubmitError(dateError);
                 return;
@@ -174,10 +187,17 @@ export default function NewAddressPage() {
                     .filter((file): file is File => file !== null);
 
                 if (filesToUpload.length > 0) {
-                    uploadedImages = await uploadMutation.mutateAsync(filesToUpload);
+                    uploadedImages =
+                        await uploadMutation.mutateAsync(
+                            filesToUpload,
+                        );
 
-                    if (uploadedImages.length !== filesToUpload.length) {
-                        throw new Error('Upload incompleto: quantidade de registros diferente da quantidade de arquivos.');
+                    if (
+                        uploadedImages.length !== filesToUpload.length
+                    ) {
+                        throw new Error(
+                            'Upload incompleto: quantidade de registros diferente da quantidade de arquivos.',
+                        );
                     }
                 }
 
@@ -189,18 +209,23 @@ export default function NewAddressPage() {
                     if (image.remote) {
                         if (image.id) allImageIds.push(image.id);
                     } else {
-                        const nextUploaded = uploadedImages[uploadIdx++];
+                        const nextUploaded =
+                            uploadedImages[uploadIdx++];
                         if (!nextUploaded) {
-                            throw new Error('Falha ao montar lista de imagens publicadas.');
+                            throw new Error(
+                                'Falha ao montar lista de imagens publicadas.',
+                            );
                         }
                         allImageIds.push(nextUploaded.id);
                     }
                 }
 
-                // 🌟 3) FASE EXTRA: Chamar o Google Geocoding em background de forma transparente
+                // 3) FASE EXTRA: Chamar o Google Geocoding em background de forma transparente
                 const coordinates = await fetchCoordinates(value);
-                
-                console.log(`coordinates ${JSON.stringify(coordinates)}`);
+
+                console.log(
+                    `coordinates ${JSON.stringify(coordinates)}`,
+                );
                 // 4) FASE 2: Montar payload final incluindo o tipo polimórfico e as coordenadas
                 const payload: CreateAddressPayload = {
                     type: 'RENTABLE', // Informa o discriminador para o @JsonSubTypes do Jackson
@@ -214,12 +239,16 @@ export default function NewAddressPage() {
                     state: value.state.trim().toUpperCase(),
                     country: value.country.trim(),
                     zipCode: value.zipCode.trim(), // Bate com o @JsonProperty("zipCode") da classe mãe no Java
-                    pricePerNight: value.pricePerNight ? Number(value.pricePerNight) : null,
-                    maxGuests: value.maxGuests ? Number(value.maxGuests) : null,
+                    pricePerNight: value.pricePerNight
+                        ? Number(value.pricePerNight)
+                        : null,
+                    maxGuests: value.maxGuests
+                        ? Number(value.maxGuests)
+                        : null,
                     amenities: value.amenities,
                     availableFrom: value.availableFrom || null,
                     availableTo: value.availableTo || null,
-                    
+
                     // Injeta dinamicamente as coordenadas descobertas pelo Google ou fallback nulo
                     latitude: coordinates ? coordinates.lat : null,
                     longitude: coordinates ? coordinates.lng : null,
@@ -228,12 +257,20 @@ export default function NewAddressPage() {
                     mainImageId: allImageIds[0] || undefined,
                 };
 
-                console.log(`Payload enviado para o Spring Boot:\n${JSON.stringify(payload)}`);
+                console.log(
+                    `Payload enviado para o Spring Boot:\n${JSON.stringify(payload)}`,
+                );
 
-                const created = await createMutation.mutateAsync(payload);
+                const created =
+                    await createMutation.mutateAsync(payload);
 
-                toast.success('Anúncio publicado', `"${payload.title}" já está no catálogo do Locus.`);
-                navigate(`/enderecos/${created.id}`, { replace: true });
+                toast.success(
+                    'Anúncio publicado',
+                    `"${payload.title}" já está no catálogo do Locus.`,
+                );
+                navigate(`/enderecos/${created.id}`, {
+                    replace: true,
+                });
             } catch (error) {
                 const message =
                     error instanceof ApiError
@@ -246,7 +283,8 @@ export default function NewAddressPage() {
     });
 
     const watched = useStore(form.store, (state) => state.values);
-    const submitting = createMutation.isPending || uploadMutation.isPending;
+    const submitting =
+        createMutation.isPending || uploadMutation.isPending;
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -276,7 +314,9 @@ export default function NewAddressPage() {
                         Publique um lugar para hospedar
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                        Preencha as informações com cuidado — elas aparecem em tempo real no card à direita, que é como os hóspedes vão ver o seu imóvel.
+                        Preencha as informações com cuidado — elas
+                        aparecem em tempo real no card à direita, que
+                        é como os hóspedes vão ver o seu imóvel.
                     </p>
                 </div>
 
@@ -287,7 +327,6 @@ export default function NewAddressPage() {
                         form.handleSubmit();
                     }}
                     className="grid gap-6 lg:grid-cols-[1.45fr_1fr] lg:items-start">
-                    
                     {/* ============ Formulário ============ */}
                     <div className="flex flex-col gap-7 rounded-3xl border border-border bg-card p-6 shadow-sm">
                         <FormSection
@@ -296,18 +335,29 @@ export default function NewAddressPage() {
                             <form.Field
                                 name="title"
                                 validators={{
-                                    onBlur: ({ value }) => requireText(value, 'Título'),
+                                    onBlur: ({ value }) =>
+                                        requireText(value, 'Título'),
                                 }}>
                                 {(field) => (
                                     <FormField
                                         label="Título do anúncio"
                                         required
-                                        error={field.state.meta.errors[0] as string | undefined}
+                                        error={
+                                            field.state.meta
+                                                .errors[0] as
+                                                | string
+                                                | undefined
+                                        }
                                         hint="Curto e descritivo. Ex.: 'Loft moderno em Pinheiros'">
                                         <Input
                                             id="title"
                                             value={field.state.value}
-                                            onChange={(event) => field.handleChange(event.target.value)}
+                                            onChange={(event) =>
+                                                field.handleChange(
+                                                    event.target
+                                                        .value,
+                                                )
+                                            }
                                             onBlur={field.handleBlur}
                                             maxLength={120}
                                             placeholder="Loft moderno em Pinheiros"
@@ -325,7 +375,12 @@ export default function NewAddressPage() {
                                         <Textarea
                                             id="description"
                                             value={field.state.value}
-                                            onChange={(event) => field.handleChange(event.target.value)}
+                                            onChange={(event) =>
+                                                field.handleChange(
+                                                    event.target
+                                                        .value,
+                                                )
+                                            }
                                             rows={4}
                                             maxLength={1200}
                                             placeholder="Apartamento aconchegante, perto de metrô, com varanda gourmet..."
@@ -344,17 +399,32 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="street"
                                     validators={{
-                                        onBlur: ({ value }) => requireText(value, 'Rua'),
+                                        onBlur: ({ value }) =>
+                                            requireText(value, 'Rua'),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Rua"
                                             required
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                onBlur={field.handleBlur}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 placeholder="Rua Harmonia"
                                                 className="h-11 rounded-xl"
                                             />
@@ -365,23 +435,44 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="number"
                                     validators={{
-                                        onBlur: ({ value }) => requireText(value, 'Número'),
+                                        onBlur: ({ value }) =>
+                                            requireText(
+                                                value,
+                                                'Número',
+                                            ),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Número"
                                             required
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
-                                                value={field.state.value}
+                                                value={
+                                                    field.state.value
+                                                }
                                                 maxLength={10}
                                                 placeholder="Ex: 123, S/N"
                                                 onChange={(event) => {
-                                                    const rawValue = event.target.value;
-                                                    const cleaned = rawValue.replace(/[^A-Za-z0-9\/\s-]/g, '');
-                                                    field.handleChange(cleaned);
+                                                    const rawValue =
+                                                        event.target
+                                                            .value;
+                                                    const cleaned =
+                                                        rawValue.replace(
+                                                            /[^A-Za-z0-9\/\s-]/g,
+                                                            '',
+                                                        );
+                                                    field.handleChange(
+                                                        cleaned,
+                                                    );
                                                 }}
-                                                onBlur={field.handleBlur}
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -392,8 +483,15 @@ export default function NewAddressPage() {
                                     {(field) => (
                                         <FormField label="Complemento">
                                             <Input
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
                                                 placeholder="Apto 42, bloco B"
                                                 className="h-11 rounded-xl"
                                             />
@@ -406,17 +504,35 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="neighborhood"
                                     validators={{
-                                        onBlur: ({ value }) => requireText(value, 'Bairro'),
+                                        onBlur: ({ value }) =>
+                                            requireText(
+                                                value,
+                                                'Bairro',
+                                            ),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Bairro"
                                             required
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                onBlur={field.handleBlur}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 placeholder="Pinheiros"
                                                 className="h-11 rounded-xl"
                                             />
@@ -427,23 +543,46 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="zipCode"
                                     validators={{
-                                        onBlur: ({ value }) => validateZip(value),
+                                        onBlur: ({ value }) =>
+                                            validateZip(value),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="CEP"
                                             required
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
-                                                value={field.state.value}
+                                                value={
+                                                    field.state.value
+                                                }
                                                 onChange={(event) => {
-                                                    const onlyDigits = event.target.value.replace(/\D/g, '').slice(0, 8);
-                                                    const formatted = onlyDigits.length > 5 
-                                                        ? `${onlyDigits.slice(0, 5)}-${onlyDigits.slice(5)}` 
-                                                        : onlyDigits;
-                                                    field.handleChange(formatted);
+                                                    const onlyDigits =
+                                                        event.target.value
+                                                            .replace(
+                                                                /\D/g,
+                                                                '',
+                                                            )
+                                                            .slice(
+                                                                0,
+                                                                8,
+                                                            );
+                                                    const formatted =
+                                                        onlyDigits.length >
+                                                        5
+                                                            ? `${onlyDigits.slice(0, 5)}-${onlyDigits.slice(5)}`
+                                                            : onlyDigits;
+                                                    field.handleChange(
+                                                        formatted,
+                                                    );
                                                 }}
-                                                onBlur={field.handleBlur}
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 placeholder="05435-000"
                                                 className="h-11 rounded-xl"
                                                 inputMode="numeric"
@@ -457,17 +596,35 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="city"
                                     validators={{
-                                        onBlur: ({ value }) => requireText(value, 'Cidade'),
+                                        onBlur: ({ value }) =>
+                                            requireText(
+                                                value,
+                                                'Cidade',
+                                            ),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Cidade"
                                             required
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                onBlur={field.handleBlur}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 placeholder="São Paulo"
                                                 className="h-11 rounded-xl"
                                             />
@@ -478,17 +635,36 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="state"
                                     validators={{
-                                        onBlur: ({ value }) => validateState(value),
+                                        onBlur: ({ value }) =>
+                                            validateState(value),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="UF"
                                             required
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value.toUpperCase().slice(0, 2))}
-                                                onBlur={field.handleBlur}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target.value
+                                                            .toUpperCase()
+                                                            .slice(
+                                                                0,
+                                                                2,
+                                                            ),
+                                                    )
+                                                }
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 placeholder="SP"
                                                 className="h-11 rounded-xl uppercase"
                                             />
@@ -499,17 +675,35 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="country"
                                     validators={{
-                                        onBlur: ({ value }) => requireText(value, 'País'),
+                                        onBlur: ({ value }) =>
+                                            requireText(
+                                                value,
+                                                'País',
+                                            ),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="País"
                                             required
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                onBlur={field.handleBlur}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 placeholder="Brasil"
                                                 className="h-11 rounded-xl"
                                             />
@@ -530,8 +724,15 @@ export default function NewAddressPage() {
                                         <FormField label="Check-in disponível a partir de">
                                             <Input
                                                 type="date"
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -543,9 +744,19 @@ export default function NewAddressPage() {
                                         <FormField label="Check-out até">
                                             <Input
                                                 type="date"
-                                                value={field.state.value}
-                                                min={watched.availableFrom || undefined}
-                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                min={
+                                                    watched.availableFrom ||
+                                                    undefined
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -555,20 +766,38 @@ export default function NewAddressPage() {
                                 <form.Field
                                     name="maxGuests"
                                     validators={{
-                                        onBlur: ({ value }) => validateNonNegativeNumber(value, 'Capacidade'),
+                                        onBlur: ({ value }) =>
+                                            validateNonNegativeNumber(
+                                                value,
+                                                'Capacidade',
+                                            ),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Hóspedes (máx.)"
-                                            error={field.state.meta.errors[0] as string | undefined}>
+                                            error={
+                                                field.state.meta
+                                                    .errors[0] as
+                                                    | string
+                                                    | undefined
+                                            }>
                                             <Input
                                                 type="number"
                                                 inputMode="numeric"
                                                 min={1}
                                                 max={20}
-                                                value={field.state.value}
-                                                onChange={(event) => field.handleChange(event.target.value)}
-                                                onBlur={field.handleBlur}
+                                                value={
+                                                    field.state.value
+                                                }
+                                                onChange={(event) =>
+                                                    field.handleChange(
+                                                        event.target
+                                                            .value,
+                                                    )
+                                                }
+                                                onBlur={
+                                                    field.handleBlur
+                                                }
                                                 placeholder="4"
                                                 className="h-11 rounded-xl"
                                             />
@@ -580,19 +809,33 @@ export default function NewAddressPage() {
                             <form.Field
                                 name="pricePerNight"
                                 validators={{
-                                    onBlur: ({ value }) => validateNonNegativeNumber(value, 'Preço'),
+                                    onBlur: ({ value }) =>
+                                        validateNonNegativeNumber(
+                                            value,
+                                            'Preço',
+                                        ),
                                 }}>
                                 {(field) => (
                                     <FormField
                                         label="Preço por noite (R$)"
                                         hint="Deixe vazio para combinar diretamente."
-                                        error={field.state.meta.errors[0] as string | undefined}>
+                                        error={
+                                            field.state.meta
+                                                .errors[0] as
+                                                | string
+                                                | undefined
+                                        }>
                                         <Input
                                             type="number"
                                             inputMode="numeric"
                                             min={0}
                                             value={field.state.value}
-                                            onChange={(event) => field.handleChange(event.target.value)}
+                                            onChange={(event) =>
+                                                field.handleChange(
+                                                    event.target
+                                                        .value,
+                                                )
+                                            }
                                             onBlur={field.handleBlur}
                                             placeholder="350"
                                             className="h-11 rounded-xl"
@@ -611,7 +854,9 @@ export default function NewAddressPage() {
                                 {(field) => (
                                     <AmenitySelector
                                         value={field.state.value}
-                                        onChange={(next) => field.handleChange(next)}
+                                        onChange={(next) =>
+                                            field.handleChange(next)
+                                        }
                                     />
                                 )}
                             </form.Field>
@@ -626,7 +871,8 @@ export default function NewAddressPage() {
                                 images={images}
                                 onChange={setImages}
                                 externalError={
-                                    uploadMutation.error instanceof Error
+                                    uploadMutation.error instanceof
+                                    Error
                                         ? uploadMutation.error.message
                                         : null
                                 }
@@ -638,7 +884,10 @@ export default function NewAddressPage() {
                             <div
                                 role="alert"
                                 className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                                <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                                <AlertCircle
+                                    size={16}
+                                    className="mt-0.5 shrink-0"
+                                />
                                 <span>{submitError}</span>
                             </div>
                         ) : null}
@@ -659,7 +908,10 @@ export default function NewAddressPage() {
                                 disabled={submitting}>
                                 {submitting ? (
                                     <>
-                                        <Loader2 size={16} className="animate-spin" />
+                                        <Loader2
+                                            size={16}
+                                            className="animate-spin"
+                                        />
                                         Publicando…
                                     </>
                                 ) : (

@@ -119,28 +119,47 @@ export default function EditAddressPage() {
     const uploadMutation = useUploadRentableAddressImages();
 
     const [images, setImages] = useState<UploaderImage[]>([]);
-    const [submitError, setSubmitError] = useState<string | null>(
-        null,
-    );
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-    const [pendingValues, setPendingValues] =
-        useState<FormValues | null>(null);
-    const [isGalleryInitialized, setIsGalleryInitialized] =
-        useState(false);
+    const [pendingValues, setPendingValues] = useState<FormValues | null>(null);
+    const [isGalleryInitialized, setIsGalleryInitialized] = useState(false);
+
+    //FASE EXTRA: Busca as coordenadas na API v4 mapeando via 'results' do Google
+    const fetchCoordinates = async (value: FormValues): Promise<{ lat: number; lng: number } | null> => {
+        try {
+            const addressString = `${value.street}, ${value.number} - ${value.neighborhood}, ${value.city} - ${value.state}, ${value.zipCode}`;
+            const encodedAddress = encodeURIComponent(addressString.trim());
+            const url = `https://geocode.googleapis.com/v4/geocode/address/${encodedAddress}?key=${import.meta.env.VITE_GOOGLE_API_KEY}&regionCode=BR`;
+
+            const response = await fetch(url);
+            if (!response.ok) return null;
+
+            const data = await response.json();
+            
+            const firstResult = data.results?.[0];
+            const location = firstResult?.location;
+
+            if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
+                return {
+                    lat: location.latitude,
+                    lng: location.longitude
+                };
+            }
+            return null;
+        } catch (e) {
+            console.error('Falha ao tentar geocodificar o endereço na edição:', e);
+            return null;
+        }
+    };
 
     const isOwner = useMemo(() => {
-        // Se o formulário já foi submetido com sucesso e estamos a redirecionar, não bloqueia
         if (updateMutation.isSuccess) return true;
-
         if (!currentUser?.id || !address) return false;
 
-        // Tenta apanhar o hostId diretamente ou de dentro de um objeto 'host' se o backend mudar o formato
         const rawHostId = address.hostId ?? (address as any).host?.id;
         if (!rawHostId) return false;
 
-        const loggedUserId = String(currentUser.id)
-            .trim()
-            .toLowerCase();
+        const loggedUserId = String(currentUser.id).trim().toLowerCase();
         const addressHostId = String(rawHostId).trim().toLowerCase();
 
         return loggedUserId === addressHostId;
@@ -154,7 +173,6 @@ export default function EditAddressPage() {
     );
 
     useEffect(() => {
-        // Só inicializa se o endereço e as URLs existirem, e se ainda não tiver sido feito antes
         if (
             address?.images &&
             resolvedUrls.length > 0 &&
@@ -165,14 +183,13 @@ export default function EditAddressPage() {
                     id: img.id,
                     url: resolvedUrls[index],
                     remote: true,
-                }));
+                    }));
 
             setImages(formattedImages);
-            setIsGalleryInitialized(true); // Tranca a inicialização para não sobrescrever deleções locais
+            setIsGalleryInitialized(true);
         }
     }, [address?.images, resolvedUrls, isGalleryInitialized]);
 
-    // 3. Caso o id do endereço mude (ex: trocou de imóvel), resetamos a trava
     useEffect(() => {
         setIsGalleryInitialized(false);
     }, [id]);
@@ -210,25 +227,13 @@ export default function EditAddressPage() {
             state: address.state ?? '',
             country: address.country ?? 'Brasil',
             zipCode: address.cep ?? '',
-            pricePerNight: address.pricePerNight
-                ? String(address.pricePerNight)
-                : '',
-            maxGuests: address.maxGuests
-                ? String(address.maxGuests)
-                : '',
-            availableFrom: address.availableFrom
-                ? address.availableFrom.split('T')[0]
-                : '',
-            availableTo: address.availableTo
-                ? address.availableTo.split('T')[0]
-                : '',
+            pricePerNight: address.pricePerNight ? String(address.pricePerNight) : '',
+            maxGuests: address.maxGuests ? String(address.maxGuests) : '',
+            availableFrom: address.availableFrom ? address.availableFrom.split('T')[0] : '',
+            availableTo: address.availableTo ? address.availableTo.split('T')[0] : '',
             amenities: address.amenities ?? [],
-            latitude: address.latitude
-                ? String(address.latitude)
-                : '',
-            longitude: address.longitude
-                ? String(address.longitude)
-                : '',
+            latitude: address.latitude ? String(address.latitude) : '',
+            longitude: address.longitude ? String(address.longitude) : '',
         };
     }, [address]);
 
@@ -261,8 +266,7 @@ export default function EditAddressPage() {
                 .filter((file): file is File => file !== null);
 
             if (filesToUpload.length > 0) {
-                uploadedImages =
-                    await uploadMutation.mutateAsync(filesToUpload);
+                uploadedImages = await uploadMutation.mutateAsync(filesToUpload);
             }
 
             const allImageIds: string[] = [];
@@ -273,54 +277,40 @@ export default function EditAddressPage() {
                     if (img.id) allImageIds.push(img.id);
                 } else {
                     const nextUploaded = uploadedImages[uploadIdx++];
-                    if (nextUploaded)
-                        allImageIds.push(nextUploaded.id);
+                    if (nextUploaded) allImageIds.push(nextUploaded.id);
                 }
             }
 
-            const payload: UpdateAddressPayload = {
-                // Obrigatório para o @JsonSubTypes do Spring saber qual DTO filho instanciar
-                type: 'RENTABLE',
+            // 🌟 FASE EXTRA: Dispara a geocodificação transparente na alteração do endereço
+            const coordinates = await fetchCoordinates(pendingValues);
 
+            const payload: UpdateAddressPayload = {
+                type: 'RENTABLE',
                 title: pendingValues.title.trim(),
                 description: pendingValues.description.trim() || null,
                 street: pendingValues.street.trim(),
-
-                // Mantém como string para respeitar o types.ts e sanar o erro ts(2322)
                 number: pendingValues.number.trim(),
-
                 complement: pendingValues.complement.trim() || null,
                 neighborhood: pendingValues.neighborhood.trim(),
                 city: pendingValues.city.trim(),
                 state: pendingValues.state.trim().toUpperCase(),
                 country: pendingValues.country.trim(),
-
-                // usa 'zipCode' conforme configurado no @JsonProperty("zipCode") do Java
                 zipCode: pendingValues.zipCode.trim(),
-
-                pricePerNight: pendingValues.pricePerNight
-                    ? Number(pendingValues.pricePerNight)
-                    : null,
-                maxGuests: pendingValues.maxGuests
-                    ? Number(pendingValues.maxGuests)
-                    : null,
+                pricePerNight: pendingValues.pricePerNight ? Number(pendingValues.pricePerNight) : null,
+                maxGuests: pendingValues.maxGuests ? Number(pendingValues.maxGuests) : null,
                 amenities: pendingValues.amenities,
                 availableFrom: pendingValues.availableFrom || null,
                 availableTo: pendingValues.availableTo || null,
 
-                // Mantendo a compatibilidade caso use os campos de coordenadas
-                latitude: pendingValues.latitude
-                    ? Number(pendingValues.latitude)
-                    : null,
-                longitude: pendingValues.longitude
-                    ? Number(pendingValues.longitude)
-                    : null,
+                // Injeta as coordenadas encontradas ou atualizadas pelo Google Maps v4
+                latitude: coordinates ? coordinates.lat : (pendingValues.latitude ? Number(pendingValues.latitude) : null),
+                longitude: coordinates ? coordinates.lng : (pendingValues.longitude ? Number(pendingValues.longitude) : null),
 
                 imageIds: allImageIds,
                 mainImageId: allImageIds[0] || undefined,
             };
 
-            console.log(`${JSON.stringify(payload)}`);
+            console.log(`Payload de Edição enviado ao Spring Boot:\n${JSON.stringify(payload)}`);
 
             await updateMutation.mutateAsync(payload);
             toast.success(
@@ -339,18 +329,14 @@ export default function EditAddressPage() {
     }
 
     const watched = useStore(form.store, (state) => state.values);
-    const saving =
-        updateMutation.isPending || uploadMutation.isPending;
+    const saving = updateMutation.isPending || uploadMutation.isPending;
 
     if (isLoadingDetails) {
         return (
             <div className="flex min-h-screen flex-col bg-background text-foreground">
                 <Header />
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
-                    <Loader2
-                        size={24}
-                        className="animate-spin text-primary"
-                    />
+                    <Loader2 size={24} className="animate-spin text-primary" />
                     Buscando dados do endereço...
                 </div>
                 <Footer />
@@ -363,24 +349,13 @@ export default function EditAddressPage() {
             <div className="flex min-h-screen flex-col bg-background text-foreground">
                 <Header />
                 <div className="mx-auto flex max-w-md flex-1 flex-col justify-center text-center px-6">
-                    <AlertCircle
-                        size={40}
-                        className="mx-auto mb-4 text-destructive"
-                    />
-                    <h2 className="text-xl font-semibold">
-                        Hospedagem não encontrada
-                    </h2>
+                    <AlertCircle size={40} className="mx-auto mb-4 text-destructive" />
+                    <h2 className="text-xl font-semibold">Hospedagem não encontrada</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        O endereço informado não existe ou foi
-                        removido do sistema.
+                        O endereço informado não existe ou foi removido do sistema.
                     </p>
-                    <Button
-                        asChild
-                        className="mt-5 rounded-xl"
-                        variant="outline">
-                        <Link to="/enderecos/meus">
-                            Voltar para meus imóveis
-                        </Link>
+                    <Button asChild className="mt-5 rounded-xl" variant="outline">
+                        <Link to="/enderecos/meus">Voltar para meus imóveis</Link>
                     </Button>
                 </div>
                 <Footer />
@@ -393,23 +368,13 @@ export default function EditAddressPage() {
             <div className="flex min-h-screen flex-col bg-background text-foreground">
                 <Header />
                 <div className="mx-auto flex max-w-md flex-1 flex-col justify-center text-center px-6">
-                    <ShieldAlert
-                        size={44}
-                        className="mx-auto mb-4 text-amber-500"
-                    />
-                    <h2 className="text-xl font-semibold tracking-tight">
-                        Acesso Negado
-                    </h2>
+                    <ShieldAlert size={44} className="mx-auto mb-4 text-amber-500" />
+                    <h2 className="text-xl font-semibold tracking-tight">Acesso Negado</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Você não tem permissão para modificar este
-                        anúncio porque ele pertence a outro anfitrião.
+                        Você não tem permissão para modificar este anúncio porque ele pertence a outro anfitrião.
                     </p>
-                    <Button
-                        asChild
-                        className="mt-5 rounded-xl bg-secondary text-foreground hover:bg-secondary/80">
-                        <Link to="/enderecos">
-                            Voltar para buscas
-                        </Link>
+                    <Button asChild className="mt-5 rounded-xl bg-secondary text-foreground hover:bg-secondary/80">
+                        <Link to="/enderecos">Voltar para buscas</Link>
                     </Button>
                 </div>
                 <Footer />
@@ -424,10 +389,7 @@ export default function EditAddressPage() {
                 <Breadcrumbs
                     items={[
                         { label: 'Hospedagens', href: '/enderecos' },
-                        {
-                            label: 'Minhas Hospedagens',
-                            href: '/enderecos/meus',
-                        },
+                        { label: 'Minhas Hospedagens', href: '/enderecos/meus' },
                         { label: 'Editar' },
                     ]}
                     className="mb-4"
@@ -464,28 +426,17 @@ export default function EditAddressPage() {
                             <form.Field
                                 name="title"
                                 validators={{
-                                    onBlur: ({ value }) =>
-                                        requireText(value, 'Título'),
+                                    onBlur: ({ value }) => requireText(value, 'Título'),
                                 }}>
                                 {(field) => (
                                     <FormField
                                         label="Título do anúncio"
                                         required
-                                        error={
-                                            field.state.meta
-                                                .errors[0] as
-                                                | string
-                                                | undefined
-                                        }>
+                                        error={field.state.meta.errors[0] as string | undefined}>
                                         <Input
                                             id="title"
                                             value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(
-                                                    event.target
-                                                        .value,
-                                                )
-                                            }
+                                            onChange={(event) => field.handleChange(event.target.value)}
                                             onBlur={field.handleBlur}
                                             maxLength={120}
                                             className="h-11 rounded-xl"
@@ -501,12 +452,7 @@ export default function EditAddressPage() {
                                         <Textarea
                                             id="description"
                                             value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(
-                                                    event.target
-                                                        .value,
-                                                )
-                                            }
+                                            onChange={(event) => field.handleChange(event.target.value)}
                                             rows={4}
                                             maxLength={1200}
                                         />
@@ -524,32 +470,17 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="street"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            requireText(value, 'Rua'),
+                                        onBlur: ({ value }) => requireText(value, 'Rua'),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Rua"
                                             required
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -558,48 +489,22 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="number"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            requireText(
-                                                value,
-                                                'Número',
-                                            ),
+                                        onBlur: ({ value }) => requireText(value, 'Número'),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Número"
                                             required
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
-                                                maxLength={10} // 📏 1. Limita o tamanho físico para ninguém digitar uma redação
-                                                placeholder="Ex: 123, S/N, 45-A"
+                                                value={field.state.value}
+                                                maxLength={10}
                                                 onChange={(event) => {
-                                                    const rawValue =
-                                                        event.target
-                                                            .value;
-
-                                                    // ⚙️ 2. RegEx de limpeza: Permite apenas números, letras, hífen, barra e espaço
-                                                    // Impede o usuário de digitar caracteres especiais inválidos como @, $, %, etc.
-                                                    const cleaned =
-                                                        rawValue.replace(
-                                                            /[^A-Za-z0-9\/\s-]/g,
-                                                            '',
-                                                        );
-
-                                                    field.handleChange(
-                                                        cleaned,
-                                                    );
+                                                    const rawValue = event.target.value;
+                                                    const cleaned = rawValue.replace(/[^A-Za-z0-9\/\s-]/g, '');
+                                                    field.handleChange(cleaned);
                                                 }}
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -609,15 +514,8 @@ export default function EditAddressPage() {
                                     {(field) => (
                                         <FormField label="Complemento">
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value)}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -629,35 +527,17 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="neighborhood"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            requireText(
-                                                value,
-                                                'Bairro',
-                                            ),
+                                        onBlur: ({ value }) => requireText(value, 'Bairro'),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Bairro"
                                             required
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -666,46 +546,23 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="zipCode"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            validateZip(value),
+                                        onBlur: ({ value }) => validateZip(value),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="CEP"
                                             required
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
+                                                value={field.state.value}
                                                 onChange={(event) => {
-                                                    const onlyDigits =
-                                                        event.target.value
-                                                            .replace(
-                                                                /\D/g,
-                                                                '',
-                                                            )
-                                                            .slice(
-                                                                0,
-                                                                8,
-                                                            );
-                                                    const formatted =
-                                                        onlyDigits.length >
-                                                        5
-                                                            ? `${onlyDigits.slice(0, 5)}-${onlyDigits.slice(5)}`
-                                                            : onlyDigits;
-                                                    field.handleChange(
-                                                        formatted,
-                                                    );
+                                                    const onlyDigits = event.target.value.replace(/\D/g, '').slice(0, 8);
+                                                    const formatted = onlyDigits.length > 5 
+                                                        ? `${onlyDigits.slice(0, 5)}-${onlyDigits.slice(5)}` 
+                                                        : onlyDigits;
+                                                    field.handleChange(formatted);
                                                 }}
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl"
                                                 inputMode="numeric"
                                             />
@@ -718,35 +575,17 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="city"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            requireText(
-                                                value,
-                                                'Cidade',
-                                            ),
+                                        onBlur: ({ value }) => requireText(value, 'Cidade'),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Cidade"
                                             required
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -755,36 +594,17 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="state"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            validateState(value),
+                                        onBlur: ({ value }) => validateState(value),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="UF"
                                             required
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target.value
-                                                            .toUpperCase()
-                                                            .slice(
-                                                                0,
-                                                                2,
-                                                            ),
-                                                    )
-                                                }
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value.toUpperCase().slice(0, 2))}
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl uppercase"
                                             />
                                         </FormField>
@@ -793,35 +613,17 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="country"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            requireText(
-                                                value,
-                                                'País',
-                                            ),
+                                        onBlur: ({ value }) => requireText(value, 'País'),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="País"
                                             required
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -841,15 +643,8 @@ export default function EditAddressPage() {
                                         <FormField label="Check-in a partir de">
                                             <Input
                                                 type="date"
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value)}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -860,19 +655,9 @@ export default function EditAddressPage() {
                                         <FormField label="Check-out até">
                                             <Input
                                                 type="date"
-                                                value={
-                                                    field.state.value
-                                                }
-                                                min={
-                                                    watched.availableFrom ||
-                                                    undefined
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
+                                                value={field.state.value}
+                                                min={watched.availableFrom || undefined}
+                                                onChange={(event) => field.handleChange(event.target.value)}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -881,38 +666,20 @@ export default function EditAddressPage() {
                                 <form.Field
                                     name="maxGuests"
                                     validators={{
-                                        onBlur: ({ value }) =>
-                                            validateNonNegativeNumber(
-                                                value,
-                                                'Capacidade',
-                                            ),
+                                        onBlur: ({ value }) => validateNonNegativeNumber(value, 'Capacidade'),
                                     }}>
                                     {(field) => (
                                         <FormField
                                             label="Hóspedes (máx.)"
-                                            error={
-                                                field.state.meta
-                                                    .errors[0] as
-                                                    | string
-                                                    | undefined
-                                            }>
+                                            error={field.state.meta.errors[0] as string | undefined}>
                                             <Input
                                                 type="number"
                                                 inputMode="numeric"
                                                 min={1}
                                                 max={20}
-                                                value={
-                                                    field.state.value
-                                                }
-                                                onChange={(event) =>
-                                                    field.handleChange(
-                                                        event.target
-                                                            .value,
-                                                    )
-                                                }
-                                                onBlur={
-                                                    field.handleBlur
-                                                }
+                                                value={field.state.value}
+                                                onChange={(event) => field.handleChange(event.target.value)}
+                                                onBlur={field.handleBlur}
                                                 className="h-11 rounded-xl"
                                             />
                                         </FormField>
@@ -922,32 +689,18 @@ export default function EditAddressPage() {
                             <form.Field
                                 name="pricePerNight"
                                 validators={{
-                                    onBlur: ({ value }) =>
-                                        validateNonNegativeNumber(
-                                            value,
-                                            'Preço',
-                                        ),
+                                    onBlur: ({ value }) => validateNonNegativeNumber(value, 'Preço'),
                                 }}>
                                 {(field) => (
                                     <FormField
                                         label="Preço por noite (R$)"
-                                        error={
-                                            field.state.meta
-                                                .errors[0] as
-                                                | string
-                                                | undefined
-                                        }>
+                                        error={field.state.meta.errors[0] as string | undefined}>
                                         <Input
                                             type="number"
                                             inputMode="numeric"
                                             min={0}
                                             value={field.state.value}
-                                            onChange={(event) =>
-                                                field.handleChange(
-                                                    event.target
-                                                        .value,
-                                                )
-                                            }
+                                            onChange={(event) => field.handleChange(event.target.value)}
                                             onBlur={field.handleBlur}
                                             className="h-11 rounded-xl"
                                         />
@@ -965,9 +718,7 @@ export default function EditAddressPage() {
                                 {(field) => (
                                     <AmenitySelector
                                         value={field.state.value}
-                                        onChange={(next) =>
-                                            field.handleChange(next)
-                                        }
+                                        onChange={(next) => field.handleChange(next)}
                                     />
                                 )}
                             </form.Field>
@@ -982,8 +733,7 @@ export default function EditAddressPage() {
                                 images={images}
                                 onChange={setImages}
                                 externalError={
-                                    uploadMutation.error instanceof
-                                    Error
+                                    uploadMutation.error instanceof Error
                                         ? uploadMutation.error.message
                                         : null
                                 }
@@ -994,10 +744,7 @@ export default function EditAddressPage() {
                             <div
                                 role="alert"
                                 className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                                <AlertCircle
-                                    size={16}
-                                    className="mt-0.5 shrink-0"
-                                />
+                                <AlertCircle size={16} className="mt-0.5 shrink-0" />
                                 <span>{submitError}</span>
                             </div>
                         )}
@@ -1009,9 +756,7 @@ export default function EditAddressPage() {
                                 variant="outline"
                                 className="h-11 rounded-xl px-5"
                                 disabled={saving}>
-                                <Link to="/enderecos/meus">
-                                    Cancelar
-                                </Link>
+                                <Link to="/enderecos/meus">Cancelar</Link>
                             </Button>
                             <Button
                                 type="submit"
@@ -1019,16 +764,11 @@ export default function EditAddressPage() {
                                 disabled={saving}>
                                 {saving ? (
                                     <>
-                                        <Loader2
-                                            size={16}
-                                            className="animate-spin"
-                                        />{' '}
-                                        Salvando...
+                                        <Loader2 size={16} className="animate-spin" /> Salvando...
                                     </>
                                 ) : (
                                     <>
-                                        <Save size={16} /> Gravar
-                                        alterações
+                                        <Save size={16} /> Gravar alterações
                                     </>
                                 )}
                             </Button>

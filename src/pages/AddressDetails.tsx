@@ -23,7 +23,6 @@ import { Footer } from "@/components/Footer"
 import { Breadcrumbs } from "@/components/Breadcrumbs"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-// 🔄 Corrigido: Importando o seu hook real 'useAddress' no lugar de 'useAddressDetails'
 import { useAddress, useDeleteRentableAddress, useRentableAddressImages } from "@/hooks/useAddresses"
 import { useCurrentUser } from "@/hooks/useAuth"
 import { formatDate } from "@/lib/user"
@@ -45,7 +44,6 @@ export default function AddressDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   
-  // 🔄 Corrigido: Chamando o seu hook useAddress original intacto
   const { data: address, isLoading, isError, error } = useAddress(id)
   const { data: currentUser } = useCurrentUser()
   const deleteMutation = useDeleteRentableAddress()
@@ -142,7 +140,9 @@ export default function AddressDetailsPage() {
           </p>
         </div>
 
-        {/* Galeria de Imagens */}
+        {/* =========================================================================
+            Galeria de Imagens com Efeito Transição de Fade Suave e Troca Dinâmica
+            ========================================================================= */}
         <section className="mb-10">
           {images.length === 0 ? (
             <div className="flex h-[380px] w-full flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border bg-card text-muted-foreground">
@@ -150,68 +150,73 @@ export default function AddressDetailsPage() {
               <span className="text-sm font-medium">Nenhuma foto publicada para este imóvel</span>
             </div>
           ) : images.length === 1 ? (
-            <div className="relative aspect-[21/9] w-full overflow-hidden rounded-3xl border border-border bg-card group shadow-sm">
+            <div className="relative aspect-[21/9] w-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
               <img src={images[0]} alt={address.title} className="size-full object-cover" />
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-[1.5fr_1fr] lg:grid-cols-[1.8fr_1fr]">
-              {/* Box da Imagem Ativa */}
+              {/* Box da Imagem Ativa (Destaque Esquerdo) */}
               <div className="relative aspect-[16/10] md:aspect-auto md:h-[480px] overflow-hidden rounded-3xl border border-border bg-card shadow-sm group">
-                <img src={cover} alt={address.title} className="size-full object-cover transition duration-300" />
+                <img 
+                  key={cover} // Mudar a key força o React a re-renderizar a imagem aplicando a animação de fade
+                  src={cover} 
+                  alt={address.title} 
+                  className="size-full object-cover transition-opacity duration-500 ease-in-out animate-in fade-in" 
+                />
                 
-                {/* Controles internos de navegação */}
-                <div className="absolute inset-x-4 top-1/2 flex -translate-y-1/2 justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {/* Controles internos de navegação por seta */}
+                <div className="absolute inset-x-4 top-1/2 flex -translate-y-1/2 justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                   <button
                     type="button"
                     onClick={() => setActiveImage((current) => (current - 1 + images.length) % images.length)}
-                    className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-md backdrop-blur-xs hover:bg-background"
+                    className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-md backdrop-blur-xs hover:bg-background transition"
                   >
                     <ChevronLeft size={16} />
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveImage((current) => (current + 1) % images.length)}
-                    className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-md backdrop-blur-xs hover:bg-background"
+                    className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-md backdrop-blur-xs hover:bg-background transition"
                   >
                     <ChevronRight size={16} />
                   </button>
                 </div>
                 
-                {/* Badge contador indicador de fotos */}
-                <span className="absolute bottom-4 right-4 rounded-xl bg-background/80 px-3 py-1.5 text-xs font-semibold tracking-wider text-foreground backdrop-blur-md border border-border/40">
+                {/* Contador indicador de fotos */}
+                <span className="absolute bottom-4 right-4 rounded-xl bg-background/80 px-3 py-1.5 text-xs font-semibold tracking-wider text-foreground backdrop-blur-md border border-border/40 z-10">
                   {activeImage + 1} / {images.length}
                 </span>
               </div>
 
-              {/* Grid das Miniaturas de Seleção Direta */}
+              {/* Grid Lateral Dinâmico: Oculta temporariamente a foto que já está em foco na esquerda */}
               <div className="grid grid-cols-2 gap-3 h-auto md:h-[480px]">
-                {/* 🔄 CORREÇÃO: Corta do índice 1 em diante para listar as OUTRAS fotos */}
-                {images.slice(1, 5).map((url, index) => {
-                  // Como cortamos o array a partir de 1, o índice real no array original é index + 1
-                  const realIndex = index + 1;
-                  
-                  return (
+                {images
+                  .map((url, origIdx) => ({ url, origIdx })) // Preserva o ID original do array de fotos
+                  .filter((item) => item.origIdx !== activeImage) // Remove do grid lateral a imagem em destaque
+                  .slice(0, 4) // Pega as próximas 4 imagens ordenadas
+                  .map((item, gridIdx) => (
                     <button
-                      key={`${url}-${index}`}
+                      key={`${item.url}-${item.origIdx}`}
                       type="button"
-                      onClick={() => setActiveImage(realIndex)}
-                      className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 ${
-                        activeImage === realIndex
-                          ? "border-primary ring-4 ring-primary/10 scale-[0.98]"
-                          : "border-border hover:border-primary/40"
-                      }`}
+                      onClick={() => setActiveImage(item.origIdx)} // Restaura o índice global correto ao clicar
+                      className="group relative overflow-hidden rounded-2xl border border-border hover:border-primary/50 transition-all duration-300 h-full w-full bg-secondary/10"
                     >
-                      <img src={url} alt={`Painel ${realIndex + 1}`} className="size-full object-cover group-hover:scale-102 transition duration-300" loading="lazy" />
+                      <img 
+                        src={item.url} 
+                        alt={`Painel lateral ${gridIdx + 1}`} 
+                        className="size-full object-cover group-hover:scale-103 transition duration-500 ease-out" 
+                        loading="lazy" 
+                      />
                       
-                      {/* 🔄 CORREÇÃO: Badge de fotos restantes baseado no corte correto */}
-                      {index === 3 && images.length > 5 && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/60 font-semibold text-sm backdrop-blur-xs border border-border/10">
-                          +{images.length - 5} fotos
+                      {/* Overlay com contador de fotos extras na última célula da direita */}
+                      {gridIdx === 3 && images.length > 5 && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70 font-semibold text-sm backdrop-blur-xs border border-border/10 transition group-hover:bg-background/60">
+                          <span className="text-primary text-base font-bold">+{images.length - 5}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">fotos disponíveis</span>
                         </div>
                       )}
                     </button>
-                  );
-                })}
+                  ))}
               </div>
             </div>
           )}
@@ -343,11 +348,10 @@ export default function AddressDetailsPage() {
                 <>
                   <Separator className="my-2" />
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">
+                    <span className="section-title text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">
                       Gerenciamento do anúncio
                     </span>
                     
-                    {/* Botão de Redirecionamento para Edição */}
                     <Button asChild variant="outline" className="w-full h-10 rounded-xl text-xs font-semibold gap-1.5 hover:bg-secondary">
                       <Link to={`/enderecos/${address.id}/editar`}>
                         <Pencil size={13} />

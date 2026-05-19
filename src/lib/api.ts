@@ -334,3 +334,4 @@ export async function fetchAdminAudit(params?: { page?: number; size?: number })
   const qs = buildQueryString(params as Record<string, unknown>)
   return request<PagedResponse<AdminAuditEntry>>(`/admin/audit${qs}`)
 }
+
