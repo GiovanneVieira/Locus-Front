@@ -14,6 +14,7 @@ import type {
   OtpResponse,
   PagedResponse,
   RegisterPayload,
+  RentableAddressDetailResponse,
   SendOtpPayload,
   UpdateAddressPayload,
   UpdateUserPayload,
@@ -197,15 +198,19 @@ export async function fetchAddressByUserId(id: string) {
   return request<Address>(`/address/rentable/user/${id}`)
 }
 
-export async function fetchAddressById(id: string) {
-  return request<Address>(`/address/rentable/${id}`)
+export async function fetchRentableAddressById(id: string) {
+  return request<RentableAddressDetailResponse>(`/address/rentable/${id}`)
 }
+
 
 export async function createAddress(payload: CreateAddressPayload) {
   return request<Address>("/addresses", {
     method: "POST",
     body: JSON.stringify(payload)
   })
+}
+export function getRentableAddressImageUrl(imageId: string): string {
+  return `${API_BASE_URL}/s3/rentable-address/image/${imageId}/content`
 }
 
 export async function createRentableAddress(payload: CreateAddressPayload) {
@@ -215,15 +220,26 @@ export async function createRentableAddress(payload: CreateAddressPayload) {
   })
 }
 
-export async function updateAddress(id: string, payload: UpdateAddressPayload) {
-  return request<Address>(`/addresses/${id}`, {
+export async function updateRentableAddress(id: string, payload: UpdateAddressPayload) {
+  return request<Address>(`/address/rentable/${id}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   })
+}   
+
+export async function updatePersonalAddress(id: string, payload: UpdateAddressPayload) {
+  return request<Address>(`/address/personal/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  })
+}  
+
+export async function deleteRentableAddress(id: string) {
+  return request<{ message: string }>(`/address/rentable/${id}`, { method: "DELETE" })
 }
 
-export async function deleteAddress(id: string) {
-  return request<{ message: string }>(`/addresses/${id}`, { method: "DELETE" })
+export async function deletePersonalAddress(id: string) {
+  return request<{ message: string }>(`/address/personal/${id}`, { method: "DELETE" })
 }
 
 /* ========== Upload de imagens (S3) ========== */

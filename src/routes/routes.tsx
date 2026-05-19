@@ -18,6 +18,7 @@ import NotFoundPage from "@/pages/NotFound"
 import PlanningPage from "@/pages/Planning"
 import ProfilePage from "@/pages/Profile"
 import RadarPage from "@/pages/Radar"
+import EditAddressPage from "@/pages/EditAddressPage"
 
 export const router = createBrowserRouter([
   {
@@ -78,7 +79,19 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "/enderecos/:id", Component: AddressDetailsPage },
-      { path: "/heuristicas", Component: HeuristicsPage },
+      {
+        path: "/enderecos/:id/editar",
+        element: (
+          <ProtectedRoute requireHost>
+            <EditAddressPage />
+          </ProtectedRoute>
+        ),
+      },
+      { path: "/heuristicas", element: (
+        <ProtectedRoute requireRoles={["ROLE_ADMIN"]}>
+          <HeuristicsPage />
+        </ProtectedRoute>
+      ) },
       { path: ":context/auth", Component: AuthPage },
       { path: "/auth", Component: AuthPage },
       { path: "*", Component: NotFoundPage },

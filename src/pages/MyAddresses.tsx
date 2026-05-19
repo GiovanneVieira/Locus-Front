@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link } from "react-router"
-import { Building2, Eye, Loader2, Plus, Trash2 } from "lucide-react"
+import { Building2, Eye, Loader2, Plus, Trash2, Pencil } from "lucide-react" // ✏️ Adicionado o ícone Pencil
 
 import Header from "@/components/Header/Header"
 import { Footer } from "@/components/Footer"
@@ -10,7 +10,7 @@ import AddressCard from "@/components/AddressCard"
 import { Tooltip } from "@/components/Tooltip"
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog"
 import { useToast } from "@/components/feedback/ToastProvider"
-import { useDeleteAddress, useMyAddresses } from "@/hooks/useAddresses"
+import { useDeleteRentableAddress, useMyAddresses } from "@/hooks/useAddresses"
 import { useCurrentUser } from "@/hooks/useAuth"
 import { isHost } from "@/lib/user"
 import { ApiError } from "@/lib/api"
@@ -20,7 +20,7 @@ export default function MyAddressesPage() {
   const { data: currentUser } = useCurrentUser()
   const canPublish = isHost(currentUser)
   const { data: addresses, isLoading, error } = useMyAddresses()
-  const deleteMutation = useDeleteAddress()
+  const deleteMutation = useDeleteRentableAddress()
   const toast = useToast()
 
   const [pendingDelete, setPendingDelete] = useState<Address | null>(null)
@@ -112,6 +112,7 @@ export default function MyAddressesPage() {
             {addresses.map((address) => (
               <div key={address.id} className="flex flex-col gap-2">
                 <AddressCard address={address} />
+                
                 <div className="flex gap-2">
                   <Button asChild variant="outline" className="h-11 flex-1 rounded-xl">
                     <Link
@@ -121,6 +122,19 @@ export default function MyAddressesPage() {
                       <Eye size={14} /> Ver detalhes
                     </Link>
                   </Button>
+
+                  <Tooltip label={`Editar "${address.title}"`}>
+                    <Button asChild variant="outline" className="h-11 rounded-xl hover:bg-secondary">
+                      <Link 
+                        to={`/enderecos/${address.id}/editar`} 
+                        aria-label={`Editar ${address.title}`}
+                        className="inline-flex items-center justify-center"
+                      >
+                        <Pencil size={14} />
+                      </Link>
+                    </Button>
+                  </Tooltip>
+
                   <Tooltip label={`Remover "${address.title}"`}>
                     <Button
                       variant="outline"

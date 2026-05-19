@@ -2,17 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
   createRentableAddress,
-  deleteAddress,
-  fetchAddressById,
+  fetchRentableAddressById,
   fetchAddresses,
   fetchMyAddresses,
-  updateAddress,
+  updateRentableAddress,
   uploadImages,
   uploadRentableAddressImages,
+  getRentableAddressImageUrl,
+  deleteRentableAddress,
 } from "@/lib/api"
 import type {
   AddressSearchParams,
   CreateAddressPayload,
+  RentableAddressImageResponse,
   UpdateAddressPayload,
 } from "@/lib/types"
 
@@ -42,7 +44,7 @@ export function useMyAddresses() {
 export function useAddress(id: string | undefined) {
   return useQuery({
     queryKey: addressKeys.detail(id ?? ""),
-    queryFn: () => fetchAddressById(id as string),
+    queryFn: () => fetchRentableAddressById(id as string),
     enabled: Boolean(id),
   })
 }
@@ -58,11 +60,11 @@ export function useCreateAddress() {
   })
 }
 
-export function useUpdateAddress(id: string) {
+export function useUpdateRentableAddress(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: UpdateAddressPayload) => updateAddress(id, payload),
+    mutationFn: (payload: UpdateAddressPayload) => updateRentableAddress(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: addressKeys.all })
       await queryClient.invalidateQueries({ queryKey: addressKeys.detail(id) })
@@ -70,15 +72,20 @@ export function useUpdateAddress(id: string) {
   })
 }
 
-export function useDeleteAddress() {
+export function useDeleteRentableAddress() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => deleteAddress(id),
+    mutationFn: (id: string) => deleteRentableAddress(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: addressKeys.all })
     },
   })
+}
+
+
+export function useRentableAddressImages(images: RentableAddressImageResponse[] = []) {
+  return images.map((img) => getRentableAddressImageUrl(img.id))
 }
 
 /**

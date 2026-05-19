@@ -98,25 +98,25 @@ export interface Address {
   title: string
   description?: string | null
   street: string
-  number: string
+  houseNumber: string
   complement?: string | null
   neighborhood: string
   city: string
   state: string
   country: string
-  zipCode: string
+  cep: string
   latitude?: number | null
   longitude?: number | null
   pricePerNight?: number | null
   maxGuests?: number | null
   coverImageUrl?: string | null
-  // SCRUM-126 — DoD: galeria, datas, amenidades
+  images?: RentableAddressImageResponse[]
   imageUrls?: string[]
   amenities?: string[]
   availableFrom?: string | null
   availableTo?: string | null
-  ownerId: string
-  ownerName?: string | null
+  hostId: string
+  Name?: string | null
   createdAt: string
   updatedAt: string | null
 }
@@ -147,6 +147,42 @@ export interface CreateAddressPayload {
   longitude?: number | null
 
 }
+
+export interface RentableAddressImageResponse {
+  id: string
+  originalName: string
+  s3Key: string
+  contentType: string
+  fileSize: number
+  main: boolean
+}
+
+export interface RentableAddressDetailResponse {
+  id: string
+  title: string
+  description: string | null
+  street: string
+  houseNumber: string // Mapeado como String no seu BaseAddressTypeMapper
+  neighborhood: string
+  city: string
+  state: string
+  country: string
+  cep: string         // O seu Value Object CEP serializado como String
+  pricePerNight: number | null
+  maxGuests: number | null
+  amenities: string[]
+  availableFrom: string | null
+  availableTo: string | null
+  createdAt: string
+  hostId?: string
+  complement?: string
+  hostName?: string
+  images: RentableAddressImageResponse[]
+  latitude?: number
+  longitude?: number
+}
+
+
 
 export type UpdateAddressPayload = Partial<CreateAddressPayload>
 

@@ -10,6 +10,7 @@ import AddressCard from "@/components/AddressCard"
 import { useAddresses } from "@/hooks/useAddresses"
 import { useCurrentUser } from "@/hooks/useAuth"
 import { isHost } from "@/lib/user"
+import Breadcrumbs from "@/components/Breadcrumbs"
 
 const PAGE_SIZE = 12
 
@@ -68,7 +69,6 @@ export default function AddressesPage() {
   const totalPages = data?.totalPages ?? 0
   const totalElements = data?.totalElements ?? 0
 
-
   function clearFilters() {
     setQuery("")
     setCity("")
@@ -84,6 +84,15 @@ export default function AddressesPage() {
       <Header />
 
       <main className="mx-auto max-w-7xl px-6 py-12">
+        {/* Adicionado o ajuste gramatical para "Minhas Hospedagens" no breadcrumb */}
+        <Breadcrumbs
+          items={[
+            { label: "Hospedagens", href: "/enderecos" },
+            { label: "Minhas Hospedagens" },
+          ]}
+          className="mb-5"
+        />
+
         <section className="glass-card relative overflow-hidden p-8">
           <div className="pointer-events-none absolute inset-0">
             <div className="hero-orb top-[-60px] right-[-80px] opacity-40" />
@@ -206,8 +215,8 @@ export default function AddressesPage() {
           <div className="mb-5 flex items-center justify-between text-sm text-muted-foreground">
             <p>
               {isLoading
-                ? "Carregando Hospedagens…"
-                : `${totalElements} ${totalElements === 1 ? "endereço encontrado" : "Hospedagens encontrados"}`}
+                ? "Carregando endereços…"
+                : `${totalElements} ${totalElements === 1 ? "endereço encontrado" : "endereços encontrados"}`}
             </p>
             {isFetching && !isLoading ? (
               <span className="inline-flex items-center gap-2 text-xs">
@@ -218,7 +227,7 @@ export default function AddressesPage() {
 
           {isError ? (
             <div className="rounded-3xl border border-destructive/30 bg-destructive/10 p-6 text-sm text-destructive">
-              Não foi possível carregar os Hospedagens: {(error as Error)?.message ?? "erro desconhecido"}
+              Não foi possível carregar os endereços: {(error as Error)?.message ?? "erro desconhecido"}
             </div>
           ) : isLoading ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -239,7 +248,11 @@ export default function AddressesPage() {
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {addresses.map((address) => (
-                <AddressCard key={address.id} address={address} />
+                <AddressCard 
+                  key={address.id} 
+                  address={address} 
+                  isOwner={currentUser?.id === address.hostId} // Ativa o menu caso o usuário seja o dono
+                />
               ))}
             </div>
           )}
