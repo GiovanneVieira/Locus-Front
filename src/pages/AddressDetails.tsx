@@ -59,8 +59,6 @@ export default function AddressDetailsPage() {
   const cover = images[activeImage]
   const price = formatPrice(address?.pricePerNight)
 
-  console.log(`Current user id ${currentUser?.id}`)
-
   async function handleDelete() {
     if (!address) return
     try {

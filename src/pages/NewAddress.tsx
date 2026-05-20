@@ -86,7 +86,6 @@ function requireText(value: string, label: string) {
     return undefined;
 }
 
-// ... (suas outras funções de validação pura permanecem intocadas)
 function validateState(value: string) {
     if (!value || !value.trim()) return 'Estado é obrigatório';
     if (value.trim().length !== 2)
@@ -128,47 +127,48 @@ export default function NewAddressPage() {
         null,
     );
 
-    // Função para buscar as coordenadas na API v4 do Google Maps de forma limpa
     const fetchCoordinates = async (value: FormValues): Promise<{ lat: number; lng: number } | null> => {
-    try {
-        // Concatena os campos na ordem postal brasileira ideal
-        const addressString = `${value.street}, ${value.number} - ${value.neighborhood}, ${value.city} - ${value.state}, ${value.zipCode}`;
-        
-        // Converte para o padrão seguro de URL
-        const encodedAddress = encodeURIComponent(addressString.trim());
-        const url = `https://geocode.googleapis.com/v4/geocode/address/${encodedAddress}?key=${import.meta.env.VITE_GOOGLE_API_KEY}&regionCode=BR`;
+        try {
+            const addressString = `${value.street}, ${value.number} - ${value.neighborhood}, ${value.city} - ${value.state}, ${value.zipCode}`;
+            const encodedAddress = encodeURIComponent(addressString.trim());
+            const url = `https://geocode.googleapis.com/v4/geocode/address/${encodedAddress}?key=${import.meta.env.VITE_GOOGLE_API_KEY}&regionCode=BR`;
 
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.error(`Erro HTTP na Geocoding API: ${response.status}`);
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error(`Erro HTTP na Geocoding API: ${response.status}`);
+                return null;
+            }
+
+            const data = await response.json();
+            const firstResult = data.results?.[0];
+            const location = firstResult?.location;
+
+            if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
+                return {
+                    lat: location.latitude,
+                    lng: location.longitude
+                };
+            }
+            return null;
+        } catch (e) {
+            console.error('Falha ao tentar geocodificar o endereço informado:', e);
             return null;
         }
-
-        const data = await response.json();
-        
-        // Acessa a raiz correta 'results' exposta pela v4
-        const firstResult = data.results?.[0];
-        const location = firstResult?.location;
-
-        if (location && typeof location.latitude === 'number' && typeof location.longitude === 'number') {
-            return {
-                lat: location.latitude,
-                lng: location.longitude
-            };
-        }
-        
-        console.warn("Nenhum local válido ou coordenadas encontradas para o endereço informado.");
-        return null;
-    } catch (e) {
-        console.error('Falha ao tentar geocodificar o endereço informado:', e);
-        return null;
-    }
-};
+    };
 
     const form = useForm({
         defaultValues,
         onSubmit: async ({ value }) => {
             setSubmitError(null);
+
+            // ==========================================
+            // GUARD: Força validação síncrona/assíncrona de campos
+            // ==========================================
+            await form.validate('submit');
+            if (Object.keys(form.state.errors).length > 0) {
+                setSubmitError('Por favor, corrija os erros nos campos do formulário antes de continuar.');
+                return;
+            }
 
             const dateError = validateDateRange(
                 value.availableFrom,
@@ -180,7 +180,7 @@ export default function NewAddressPage() {
             }
 
             try {
-                // 1) FASE 1: Upload das novas imagens para o S3
+                // 1) FASE 1: Upload das novas imagens para o S3 (SÓ CHEGA AQUI SE ESTIVER TUDO LIMPO)
                 let uploadedImages: ImageDetailsResponse[] = [];
                 const filesToUpload = images
                     .map((image) => image.file ?? null)
@@ -220,25 +220,22 @@ export default function NewAddressPage() {
                     }
                 }
 
-                // 3) FASE EXTRA: Chamar o Google Geocoding em background de forma transparente
+                // 3) FASE EXTRA: Chamar o Google Geocoding em background
                 const coordinates = await fetchCoordinates(value);
 
-                // console.log(
-                //     `coordinates ${JSON.stringify(coordinates)}`,
-                // );
                 // 4) FASE 2: Montar payload final incluindo o tipo polimórfico e as coordenadas
                 const payload: CreateAddressPayload = {
-                    type: 'RENTABLE', // Informa o discriminador para o @JsonSubTypes do Jackson
+                    type: 'RENTABLE',
                     title: value.title.trim(),
                     description: value.description.trim() || null,
                     street: value.street.trim(),
-                    number: value.number.trim(), // String contendo a regra flexível do Brasil (Ex: "123", "S/N")
+                    number: value.number.trim(),
                     complement: value.complement.trim() || null,
                     neighborhood: value.neighborhood.trim(),
                     city: value.city.trim(),
                     state: value.state.trim().toUpperCase(),
                     country: value.country.trim(),
-                    zipCode: value.zipCode.trim(), // Bate com o @JsonProperty("zipCode") da classe mãe no Java
+                    zipCode: value.zipCode.trim(),
                     pricePerNight: value.pricePerNight
                         ? Number(value.pricePerNight)
                         : null,
@@ -248,18 +245,11 @@ export default function NewAddressPage() {
                     amenities: value.amenities,
                     availableFrom: value.availableFrom || null,
                     availableTo: value.availableTo || null,
-
-                    // Injeta dinamicamente as coordenadas descobertas pelo Google ou fallback nulo
                     latitude: coordinates ? coordinates.lat : null,
                     longitude: coordinates ? coordinates.lng : null,
-
                     imageIds: allImageIds,
                     mainImageId: allImageIds[0] || undefined,
                 };
-
-                // console.log(
-                //     `Payload enviado para o Spring Boot:\n${JSON.stringify(payload)}`,
-                // );
 
                 const created =
                     await createMutation.mutateAsync(payload);
@@ -327,7 +317,6 @@ export default function NewAddressPage() {
                         form.handleSubmit();
                     }}
                     className="grid gap-6 lg:grid-cols-[1.45fr_1fr] lg:items-start">
-                    {/* ============ Formulário ============ */}
                     <div className="flex flex-col gap-7 rounded-3xl border border-border bg-card p-6 shadow-sm">
                         <FormSection
                             title="Identificação"
@@ -879,7 +868,6 @@ export default function NewAddressPage() {
                             />
                         </FormSection>
 
-                        {/* Erro geral de submit */}
                         {submitError ? (
                             <div
                                 role="alert"
@@ -892,7 +880,6 @@ export default function NewAddressPage() {
                             </div>
                         ) : null}
 
-                        {/* Ações */}
                         <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5">
                             <Button
                                 asChild
@@ -924,7 +911,6 @@ export default function NewAddressPage() {
                         </div>
                     </div>
 
-                    {/* ============ Preview ============ */}
                     <AddressPreviewCard
                         title={watched.title}
                         description={watched.description}

@@ -67,12 +67,12 @@ function requireText(value: string, label: string) {
     return undefined;
 }
 
-function stringifyImages(images: any[] | undefined): string {
-    if (!images) return '';
-    return JSON.stringify(
-        images.map((img) => ({ id: img.id, s3Key: img.s3Key })),
-    );
-}
+// function stringifyImages(images: any[] | undefined): string {
+//     if (!images) return '';
+//     return JSON.stringify(
+//         images.map((img) => ({ id: img.id, s3Key: img.s3Key })),
+//     );
+// }
 
 function validateState(value: string) {
     if (!value || !value.trim()) return 'Estado é obrigatório';
@@ -124,7 +124,6 @@ export default function EditAddressPage() {
     const [pendingValues, setPendingValues] = useState<FormValues | null>(null);
     const [isGalleryInitialized, setIsGalleryInitialized] = useState(false);
 
-    //FASE EXTRA: Busca as coordenadas na API v4 mapeando via 'results' do Google
     const fetchCoordinates = async (value: FormValues): Promise<{ lat: number; lng: number } | null> => {
         try {
             const addressString = `${value.street}, ${value.number} - ${value.neighborhood}, ${value.city} - ${value.state}, ${value.zipCode}`;
@@ -135,7 +134,6 @@ export default function EditAddressPage() {
             if (!response.ok) return null;
 
             const data = await response.json();
-            
             const firstResult = data.results?.[0];
             const location = firstResult?.location;
 
@@ -167,11 +165,6 @@ export default function EditAddressPage() {
 
     const resolvedUrls = useRentableAddressImages(address?.images);
 
-    const imagesFingerprint = useMemo(
-        () => stringifyImages(address?.images),
-        [address?.images],
-    );
-
     useEffect(() => {
         if (
             address?.images &&
@@ -183,7 +176,7 @@ export default function EditAddressPage() {
                     id: img.id,
                     url: resolvedUrls[index],
                     remote: true,
-                    }));
+                }));
 
             setImages(formattedImages);
             setIsGalleryInitialized(true);
@@ -197,23 +190,11 @@ export default function EditAddressPage() {
     const formValuesInitial = useMemo<FormValues>(() => {
         if (!address)
             return {
-                title: '',
-                description: '',
-                street: '',
-                number: '',
-                complement: '',
-                neighborhood: '',
-                city: '',
-                state: '',
-                country: 'Brasil',
-                zipCode: '',
-                pricePerNight: '',
-                maxGuests: '',
-                availableFrom: '',
-                availableTo: '',
-                amenities: [],
-                latitude: '',
-                longitude: '',
+                title: '', description: '', street: '', number: '',
+                complement: '', neighborhood: '', city: '', state: '',
+                country: 'Brasil', zipCode: '', pricePerNight: '',
+                maxGuests: '', availableFrom: '', availableTo: '',
+                amenities: [], latitude: '', longitude: '',
             };
 
         return {
@@ -240,6 +221,17 @@ export default function EditAddressPage() {
     const form = useForm({
         defaultValues: formValuesInitial,
         onSubmit: async ({ value }) => {
+            setSubmitError(null);
+
+            // ==========================================
+            // GUARD: Trava o avanço para o Modal/S3 se houver erros de validação
+            // ==========================================
+            await form.validate('submit');
+            if (Object.keys(form.state.errors).length > 0) {
+                setSubmitError('Por favor, corrija os erros nos campos do formulário antes de salvar.');
+                return;
+            }
+
             setPendingValues(value);
             setShowConfirmDialog(true);
         },
@@ -281,7 +273,6 @@ export default function EditAddressPage() {
                 }
             }
 
-            // 🌟 FASE EXTRA: Dispara a geocodificação transparente na alteração do endereço
             const coordinates = await fetchCoordinates(pendingValues);
 
             const payload: UpdateAddressPayload = {
@@ -301,16 +292,11 @@ export default function EditAddressPage() {
                 amenities: pendingValues.amenities,
                 availableFrom: pendingValues.availableFrom || null,
                 availableTo: pendingValues.availableTo || null,
-
-                // Injeta as coordenadas encontradas ou atualizadas pelo Google Maps v4
                 latitude: coordinates ? coordinates.lat : (pendingValues.latitude ? Number(pendingValues.latitude) : null),
                 longitude: coordinates ? coordinates.lng : (pendingValues.longitude ? Number(pendingValues.longitude) : null),
-
                 imageIds: allImageIds,
                 mainImageId: allImageIds[0] || undefined,
             };
-
-            // console.log(`Payload de Edição enviado ao Spring Boot:\n${JSON.stringify(payload)}`);
 
             await updateMutation.mutateAsync(payload);
             toast.success(
