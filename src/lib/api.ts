@@ -10,6 +10,7 @@ import type {
   AuthResponse,
   ChangeUserRolePayload,
   CreateAddressPayload,
+  ForgotPasswordDTO,
   ImageDetailsResponse,
   OtpResponse,
   PagedResponse,
@@ -141,13 +142,12 @@ export async function sendOtp(payload: SendOtpPayload) {
 /**
  * Valida se o código inserido pelo usuário corresponde ao enviado por e-mail
  */
-export async function validateOtp(payload: VerifyOtpPayload) {
+export async function validateOtp(payload: VerifyOtpPayload): Promise<OtpResponse> {
   return request<OtpResponse>("/otp/validate", {
     method: "POST",
     body: JSON.stringify(payload),
   }, false)
 }
-
 
 /* ========== User ========== */
 
@@ -168,6 +168,10 @@ export async function becomeHost() {
 
 export async function enableUser(payload: ActivateUserPayload) {
   return request<ActivateUserPayload>("/user/enable", { method: "POST" , body: JSON.stringify(payload)})
+}
+
+export async function forgotPassword(payload: ForgotPasswordDTO) {
+  return request<ForgotPasswordDTO>("/user/forgot-password", { method: "PATCH", body: JSON.stringify(payload) })
 }
 
 /* ========== Addresses (public) ========== */

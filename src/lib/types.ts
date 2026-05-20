@@ -89,6 +89,12 @@ export interface UpdateUserPayload {
   pfpUrl?: string | null
 }
 
+export interface ForgotPasswordDTO{
+  email: string
+  otpToken: string
+  password: string
+}
+
 export interface ActivateUserPayload{
   email: string
 }
@@ -182,8 +188,6 @@ export interface RentableAddressDetailResponse {
   longitude?: number
 }
 
-
-
 export type UpdateAddressPayload = Partial<CreateAddressPayload>
 
 export interface AddressSearchParams {
@@ -226,6 +230,7 @@ export interface VerifyOtpPayload {
 
 export interface OtpResponse {
   message: string
+  otpToken: string
 }
 
 /* =========================

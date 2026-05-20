@@ -6,11 +6,12 @@ import {
 
 import {
     fetchCurrentUser,
+    forgotPassword,
     login,
     logout,
     preRegister,
 } from '@/lib/api';
-import type { AuthPayload, RegisterPayload } from '@/lib/types';
+import type { AuthPayload, ForgotPasswordDTO, RegisterPayload } from '@/lib/types';
 
 export const authKeys = {
     currentUser: ['auth', 'current-user'] as const,
@@ -60,4 +61,11 @@ export function useLogout() {
             });
         },
     });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (payload: ForgotPasswordDTO) => 
+      forgotPassword(payload), 
+  })
 }
