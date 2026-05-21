@@ -194,7 +194,7 @@ export default function AdminAddresses() {
                         {address.city}, {address.state} · {address.country}
                       </p>
                       <p className="mt-0.5 text-[11px] text-muted-foreground/80">
-                        {address.ownerName ? `Por ${address.ownerName} · ` : ""}
+                        {address.hostName ? `Por ${address.hostName} · ` : ""}
                         Publicado em {formatDate(address.createdAt)} ·{" "}
                         {formatPrice(address.pricePerNight)}/noite
                       </p>
