@@ -30,6 +30,7 @@ import { ApiError } from "@/lib/api"
 import { getAmenityLabel } from "@/components/forms/AmenitySelector"
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog"
 import { useToast } from "@/components/feedback/ToastProvider"
+import { StreetView } from "@/components/StreetViewContainer"
 
 function formatPrice(value: number | null | undefined) {
   if (value === null || value === undefined) return null
@@ -324,6 +325,7 @@ export default function AddressDetailsPage() {
               </div>
             ) : null}
 
+
             <div className="bg-secondary/10 border border-border/40 rounded-xl p-4">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">
                 Anfitrião responsável
@@ -335,6 +337,7 @@ export default function AddressDetailsPage() {
                 Imóvel listado em {formatDate(address.createdAt)}
               </p>
             </div>
+
             
             <div className="flex flex-col gap-2 mt-2">
               <Button className="w-full h-11 rounded-xl font-semibold shadow-sm gap-2">
@@ -376,6 +379,18 @@ export default function AddressDetailsPage() {
             </div>
           </aside>
         </section>
+
+        <section className="mt-12">
+          <h2 className="text-xl font-bold tracking-tight text-foreground border-b border-border pb-3 mb-4">
+            Explore a vizinhança
+          </h2>
+          <div className="w-full h-[400px] overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+            <StreetView
+                address={`${address.street}, ${address.neighborhood || ""}, ${address.city} - ${address.state}, ${address.country}`}
+            />
+          </div>
+        </section>
+
       </main>
 
       <Footer />
