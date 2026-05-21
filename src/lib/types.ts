@@ -122,7 +122,7 @@ export interface Address {
   availableFrom?: string | null
   availableTo?: string | null
   hostId: string
-  Name?: string | null
+  hostName?: string | null
   createdAt: string
   updatedAt: string | null
 }
