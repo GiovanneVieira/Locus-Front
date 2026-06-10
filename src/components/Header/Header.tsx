@@ -8,6 +8,7 @@ import {
 import {
     ArrowRight,
     BadgeCheck,
+    CalendarCheck,
     LogOut,
     MapPin,
     Menu,
@@ -209,6 +210,15 @@ export default function Header() {
                                         <UserCircle2 size={16} /> Meu
                                         perfil
                                     </Link>
+                                    <Link
+                                        to="/reservas"
+                                        onClick={() =>
+                                            setUserMenuOpen(false)
+                                        }
+                                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary">
+                                        <CalendarCheck size={16} /> Minhas
+                                        reservas
+                                    </Link>
                                     {isAdmin ? (
                                         <Link
                                             to="/admin"
@@ -366,6 +376,19 @@ export default function Header() {
                                         }>
                                         <UserCircle2 size={16} /> Meu
                                         perfil
+                                    </Link>
+                                </Button>
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="rounded-full border-border">
+                                    <Link
+                                        to="/reservas"
+                                        onClick={() =>
+                                            setMenuAberto(false)
+                                        }>
+                                        <CalendarCheck size={16} /> Minhas
+                                        reservas
                                     </Link>
                                 </Button>
                                 {isAdmin ? (

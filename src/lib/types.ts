@@ -276,3 +276,91 @@ export interface AdminAuditEntry {
   description?: string | null
   createdAt: string
 }
+
+/* =========================
+   Avaliações (reviews)
+   ========================= */
+
+export interface Review {
+  id: string
+  addressId: string
+  authorId: string
+  authorName: string
+  authorPfpUrl?: string | null
+  rating: number // 1 a 5
+  comment: string
+  createdAt: string
+}
+
+export interface CreateReviewPayload {
+  rating: number
+  comment: string
+}
+
+export interface ReviewSummary {
+  average: number
+  count: number
+  /** Quantidade de avaliações por nota, índice 0 = 1 estrela … índice 4 = 5 estrelas. */
+  distribution: [number, number, number, number, number]
+}
+
+/* =========================
+   Reservas (bookings)
+   ========================= */
+
+export type BookingStatus = "PENDING" | "CONFIRMED" | "DECLINED" | "CANCELLED"
+
+export interface Booking {
+  id: string
+  addressId: string
+  addressTitle: string
+  addressCity?: string | null
+  coverImageId?: string | null
+  hostId: string
+  hostName?: string | null
+  guestId: string
+  guestName: string
+  checkIn: string // ISO (yyyy-mm-dd)
+  checkOut: string // ISO (yyyy-mm-dd)
+  guests: number
+  nights: number
+  pricePerNight: number
+  totalPrice: number
+  status: BookingStatus
+  message?: string | null
+  createdAt: string
+}
+
+export interface CreateBookingPayload {
+  checkIn: string
+  checkOut: string
+  guests: number
+  message?: string
+}
+
+/* =========================
+   Chat com o anfitrião
+   ========================= */
+
+export interface ChatMessage {
+  id: string
+  senderId: string
+  senderName: string
+  fromHost: boolean
+  text: string
+  createdAt: string
+  /** Resposta gerada automaticamente para fins de demonstração. */
+  automated?: boolean
+}
+
+export interface ChatThread {
+  id: string // `${addressId}:${guestId}`
+  addressId: string
+  addressTitle: string
+  hostId: string
+  hostName?: string | null
+  guestId: string
+  guestName: string
+  messages: ChatMessage[]
+  updatedAt: string
+}
