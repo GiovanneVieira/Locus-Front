@@ -1,11 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import {
-  createReview,
-  deleteReview,
-  fetchReviews,
-  summarizeReviews,
-} from "@/lib/communityApi"
+import { createReview, deleteReview, fetchReviews } from "@/lib/api"
+import { summarizeReviews } from "@/lib/communityApi"
 import type { CreateReviewPayload } from "@/lib/types"
 
 export const reviewKeys = {
@@ -25,15 +21,11 @@ export function useReviews(addressId: string | undefined) {
   })
 }
 
-export function useCreateReview(
-  addressId: string,
-  author: { id: string; name: string; pfpUrl?: string | null }
-) {
+export function useCreateReview(addressId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: CreateReviewPayload) =>
-      createReview(addressId, author, payload),
+    mutationFn: (payload: CreateReviewPayload) => createReview(addressId, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: reviewKeys.list(addressId) })
     },

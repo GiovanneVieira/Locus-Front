@@ -27,7 +27,7 @@ export function ReviewSection({ addressId, currentUser, isOwner }: ReviewSection
     : null
   const myReview = author ? reviews.find((r) => r.authorId === author.id) : undefined
 
-  const createReview = useCreateReview(addressId, author ?? { id: "", name: "" })
+  const createReview = useCreateReview(addressId)
   const deleteReview = useDeleteReview(addressId)
 
   const [editingId, setEditingId] = useState<string | null>(null)

@@ -15,14 +15,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/feedback/ToastProvider"
 import { useCreateBooking } from "@/hooks/useBookings"
 import { ApiError } from "@/lib/api"
-import type { RentableAddressDetailResponse, UserSession } from "@/lib/types"
+import type { RentableAddressDetailResponse } from "@/lib/types"
 
 interface BookingDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   address: RentableAddressDetailResponse
-  guest: UserSession
-  coverImageId?: string | null
 }
 
 function formatPrice(value: number) {
@@ -44,13 +42,7 @@ function countNights(checkIn: string, checkOut: string): number {
   return Math.round(diff / (1000 * 60 * 60 * 24))
 }
 
-export function BookingDialog({
-  open,
-  onOpenChange,
-  address,
-  guest,
-  coverImageId,
-}: BookingDialogProps) {
+export function BookingDialog({ open, onOpenChange, address }: BookingDialogProps) {
   const toast = useToast()
   const navigate = useNavigate()
   const createBooking = useCreateBooking()
@@ -104,17 +96,8 @@ export function BookingDialog({
 
     try {
       await createBooking.mutateAsync({
-        address: {
-          id: address.id,
-          title: address.title,
-          city: address.city,
-          hostId: address.hostId,
-          hostName: address.hostName,
-          pricePerNight,
-          coverImageId: coverImageId ?? null,
-        },
-        guest: { id: guest.id, name: guest.name },
-        payload: { checkIn, checkOut, guests, message },
+        addressId: address.id,
+        payload: { checkIn, checkOut, guests, message: message || undefined },
       })
       toast.success(
         "Reserva solicitada!",

@@ -67,8 +67,6 @@ export default function AddressDetailsPage() {
 
   const images = useRentableAddressImages(address?.images) || []
   const cover = images[activeImage]
-  const coverImageId =
-    address?.images?.find((img) => img.main)?.id ?? address?.images?.[0]?.id ?? null
   const price = formatPrice(address?.pricePerNight)
 
   async function handleDelete() {
@@ -446,13 +444,7 @@ export default function AddressDetailsPage() {
 
       {currentUser && !isOwner ? (
         <>
-          <BookingDialog
-            open={bookingOpen}
-            onOpenChange={setBookingOpen}
-            address={address}
-            guest={currentUser}
-            coverImageId={coverImageId}
-          />
+          <BookingDialog open={bookingOpen} onOpenChange={setBookingOpen} address={address} />
           <ChatDialog
             open={chatOpen}
             onOpenChange={setChatOpen}

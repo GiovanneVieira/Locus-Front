@@ -5,9 +5,8 @@ import {
   fetchHostBookings,
   fetchMyBookings,
   updateBookingStatus,
-  type CreateBookingArgs,
-} from "@/lib/communityApi"
-import type { BookingStatus } from "@/lib/types"
+} from "@/lib/api"
+import type { BookingStatus, CreateBookingPayload } from "@/lib/types"
 
 export const bookingKeys = {
   all: ["bookings"] as const,
@@ -15,18 +14,18 @@ export const bookingKeys = {
   host: (hostId: string) => ["bookings", "host", hostId] as const,
 }
 
-export function useMyBookings(guestId: string | undefined) {
+export function useMyBookings(userId: string | undefined) {
   return useQuery({
-    queryKey: bookingKeys.mine(guestId ?? ""),
-    queryFn: () => fetchMyBookings(guestId as string),
-    enabled: Boolean(guestId),
+    queryKey: bookingKeys.mine(userId ?? ""),
+    queryFn: () => fetchMyBookings(),
+    enabled: Boolean(userId),
   })
 }
 
 export function useHostBookings(hostId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: bookingKeys.host(hostId ?? ""),
-    queryFn: () => fetchHostBookings(hostId as string),
+    queryFn: () => fetchHostBookings(),
     enabled: Boolean(hostId) && enabled,
   })
 }
@@ -35,7 +34,8 @@ export function useCreateBooking() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (args: CreateBookingArgs) => createBooking(args),
+    mutationFn: (args: { addressId: string; payload: CreateBookingPayload }) =>
+      createBooking(args.addressId, args.payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: bookingKeys.all })
     },
