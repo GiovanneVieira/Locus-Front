@@ -30,6 +30,11 @@ import { ApiError } from "@/lib/api"
 import { getAmenityLabel } from "@/components/forms/AmenitySelector"
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog"
 import { useToast } from "@/components/feedback/ToastProvider"
+import { ReviewSection } from "@/components/reviews/ReviewSection"
+import { StarRating } from "@/components/reviews/StarRating"
+import { BookingDialog } from "@/components/booking/BookingDialog"
+import { ChatDialog } from "@/components/chat/ChatDialog"
+import { useReviews } from "@/hooks/useReviews"
 
 function formatPrice(value: number | null | undefined) {
   if (value === null || value === undefined) return null
@@ -52,9 +57,14 @@ export default function AddressDetailsPage() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [activeImage, setActiveImage] = useState(0)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [bookingOpen, setBookingOpen] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
 
   const isOwner = Boolean(address && currentUser && address.hostId === currentUser.id)
-  
+
+  const { data: reviewData } = useReviews(id)
+  const reviewSummary = reviewData?.summary
+
   const images = useRentableAddressImages(address?.images) || []
   const cover = images[activeImage]
   const price = formatPrice(address?.pricePerNight)
@@ -131,11 +141,25 @@ export default function AddressDetailsPage() {
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl text-balance">
             {address.title}
           </h1>
-          <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-            <MapPin size={15} className="text-primary" />
-            {address.neighborhood ? `${address.neighborhood}, ` : ""}
-            {address.city} — {address.state}, {address.country}
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <p className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              <MapPin size={15} className="text-primary" />
+              {address.neighborhood ? `${address.neighborhood}, ` : ""}
+              {address.city} — {address.state}, {address.country}
+            </p>
+            {reviewSummary && reviewSummary.count > 0 ? (
+              <a
+                href="#avaliacoes"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground transition hover:text-primary"
+              >
+                <StarRating value={reviewSummary.average} size={14} />
+                {reviewSummary.average.toFixed(1)}
+                <span className="font-normal text-muted-foreground">
+                  ({reviewSummary.count})
+                </span>
+              </a>
+            ) : null}
+          </div>
         </div>
 
         {/* =========================================================================
@@ -292,6 +316,8 @@ export default function AddressDetailsPage() {
                 </InfoRow>
               </div>
             </article>
+
+            <ReviewSection addressId={address.id} currentUser={currentUser} isOwner={isOwner} />
           </div>
 
           {/* Coluna de Ações Lateral */}
@@ -337,10 +363,32 @@ export default function AddressDetailsPage() {
             </div>
             
             <div className="flex flex-col gap-2 mt-2">
-              <Button className="w-full h-11 rounded-xl font-semibold shadow-sm gap-2">
-                <MessageSquare size={16} /> Solicitar reserva
-              </Button>
-              
+              {!isOwner &&
+                (currentUser ? (
+                  <>
+                    <Button
+                      onClick={() => setBookingOpen(true)}
+                      className="w-full h-11 rounded-xl font-semibold shadow-sm gap-2"
+                    >
+                      <CalendarDays size={16} /> Solicitar reserva
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setChatOpen(true)}
+                      className="w-full h-11 rounded-xl font-semibold gap-2"
+                    >
+                      <MessageSquare size={16} /> Conversar com o anfitrião
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => navigate("/auth")}
+                    className="w-full h-11 rounded-xl font-semibold shadow-sm gap-2"
+                  >
+                    <MessageSquare size={16} /> Entre para reservar
+                  </Button>
+                ))}
+
               {/* Painel Exclusivo do Proprietário */}
               {isOwner && (
                 <>
@@ -393,6 +441,18 @@ export default function AddressDetailsPage() {
           setConfirmOpen(false)
         }}
       />
+
+      {currentUser && !isOwner ? (
+        <>
+          <BookingDialog open={bookingOpen} onOpenChange={setBookingOpen} address={address} />
+          <ChatDialog
+            open={chatOpen}
+            onOpenChange={setChatOpen}
+            address={address}
+            guest={currentUser}
+          />
+        </>
+      ) : null}
     </div>
   )
 }

@@ -18,6 +18,7 @@ import NotFoundPage from "@/pages/NotFound"
 import PlanningPage from "@/pages/Planning"
 import ProfilePage from "@/pages/Profile"
 import RadarPage from "@/pages/Radar"
+import ReservasPage from "@/pages/Reservas"
 import EditAddressPage from "@/pages/EditAddressPage"
 
 export const router = createBrowserRouter([
@@ -50,6 +51,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/reservas",
+        element: (
+          <ProtectedRoute>
+            <ReservasPage />
           </ProtectedRoute>
         ),
       },

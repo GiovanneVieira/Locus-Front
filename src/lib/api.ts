@@ -8,14 +8,19 @@ import type {
   AdminUsersSearchParams,
   AuthPayload,
   AuthResponse,
+  Booking,
+  BookingStatus,
   ChangeUserRolePayload,
   CreateAddressPayload,
+  CreateBookingPayload,
+  CreateReviewPayload,
   ForgotPasswordDTO,
   ImageDetailsResponse,
   OtpResponse,
   PagedResponse,
   RegisterPayload,
   RentableAddressDetailResponse,
+  Review,
   SendOtpPayload,
   UpdateAddressPayload,
   UpdateUserPayload,
@@ -337,5 +342,46 @@ export async function deleteAddressAsAdmin(id: string) {
 export async function fetchAdminAudit(params?: { page?: number; size?: number }) {
   const qs = buildQueryString(params as Record<string, unknown>)
   return request<PagedResponse<AdminAuditEntry>>(`/admin/audit${qs}`)
+}
+
+/* ========== Avaliações (reviews) ========== */
+
+export async function fetchReviews(addressId: string) {
+  return request<Review[]>(`/reviews/address/${addressId}`)
+}
+
+export async function createReview(addressId: string, payload: CreateReviewPayload) {
+  return request<Review>(`/reviews/address/${addressId}`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteReview(reviewId: string) {
+  return request<void>(`/reviews/${reviewId}`, { method: "DELETE" })
+}
+
+/* ========== Reservas (rentals) ========== */
+
+export async function fetchMyBookings() {
+  return request<Booking[]>("/rentals/me")
+}
+
+export async function fetchHostBookings() {
+  return request<Booking[]>("/rentals/host")
+}
+
+export async function createBooking(addressId: string, payload: CreateBookingPayload) {
+  return request<Booking>(`/rentals/address/${addressId}`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateBookingStatus(bookingId: string, status: BookingStatus) {
+  return request<Booking>(`/rentals/${bookingId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  })
 }
 
