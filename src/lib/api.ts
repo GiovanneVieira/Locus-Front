@@ -523,11 +523,11 @@ export async function fetchAdminAudit(params?: { page?: number; size?: number })
 /* ========== Avaliações (reviews/ratings) ========== */
 
 export async function fetchReviews(addressId: string) {
-  return request<Review[]>(`/address/rentable/rating/${addressId}`)
+  return request<Review[]>(`/reviews/address/${addressId}`)
 }
 
 export async function createReview(addressId: string, payload: CreateReviewPayload) {
-  return request<Review>(`/address/rentable/rating/${addressId}`, {
+  return request<Review>(`/reviews/address/${addressId}`, {
     method: "POST",
     body: JSON.stringify(payload),
   })

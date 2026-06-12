@@ -16,6 +16,10 @@ interface ReviewSectionProps {
   isOwner: boolean
 }
 
+function formatRating(value: number | null | undefined) {
+  return Number.isFinite(value) ? (value as number).toFixed(1) : "0.0"
+}
+
 export function ReviewSection({ addressId, currentUser, isOwner }: ReviewSectionProps) {
   const toast = useToast()
   const { data, isLoading } = useReviews(addressId)
@@ -85,7 +89,7 @@ export function ReviewSection({ addressId, currentUser, isOwner }: ReviewSection
         Avaliações
         {summary && summary.count > 0 ? (
           <span className="text-sm font-medium text-muted-foreground">
-            · {summary.average.toFixed(1)} ({summary.count})
+            · {formatRating(summary.average)} ({summary.count})
           </span>
         ) : null}
       </h2>
@@ -101,7 +105,7 @@ export function ReviewSection({ addressId, currentUser, isOwner }: ReviewSection
             <div className="grid gap-5 rounded-2xl border border-border bg-card/60 p-5 sm:grid-cols-[auto_1fr] sm:items-center">
               <div className="flex flex-col items-center justify-center gap-1 sm:pr-6 sm:border-r sm:border-border">
                 <span className="text-4xl font-bold tracking-tight">
-                  {summary.average.toFixed(1)}
+                  {formatRating(summary.average)}
                 </span>
                 <StarRating value={summary.average} size={15} />
                 <span className="text-xs text-muted-foreground">

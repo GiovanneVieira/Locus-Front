@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 interface StarRatingProps {
   /** Nota atual (0 a 5). Aceita frações para exibição (ex.: 4.5). */
-  value: number
+  value?: number | null
   /** Quando fornecido, o componente vira um seletor interativo. */
   onChange?: (value: number) => void
   size?: number
@@ -28,14 +28,15 @@ export function StarRating({
 }: StarRatingProps) {
   const [hover, setHover] = useState<number | null>(null)
   const interactive = typeof onChange === "function"
-  const display = hover ?? value
+  const safeValue = Number.isFinite(value) ? Math.min(5, Math.max(0, value as number)) : 0
+  const display = hover ?? safeValue
 
   if (!interactive) {
     return (
       <span
         className={cn("inline-flex items-center gap-0.5", className)}
         role="img"
-        aria-label={`${value.toFixed(1)} de 5 estrelas`}
+        aria-label={`${safeValue.toFixed(1)} de 5 estrelas`}
       >
         {Array.from({ length: 5 }).map((_, index) => {
           const filled = index + 1 <= Math.round(display)
@@ -71,7 +72,7 @@ export function StarRating({
             key={index}
             type="button"
             role="radio"
-            aria-checked={starValue === Math.round(value)}
+            aria-checked={starValue === Math.round(safeValue)}
             aria-label={`${starValue} ${starValue === 1 ? "estrela" : "estrelas"}`}
             onMouseEnter={() => setHover(starValue)}
             onFocus={() => setHover(starValue)}

@@ -63,20 +63,22 @@ function hashString(value: string): number {
 
 export function summarizeReviews(reviews: Review[]): ReviewSummary {
   const distribution: ReviewSummary["distribution"] = [0, 0, 0, 0, 0]
-  if (reviews.length === 0) {
+  const validReviews = reviews.filter((review) => Number.isFinite(review.rating))
+
+  if (validReviews.length === 0) {
     return { average: 0, count: 0, distribution }
   }
 
   let total = 0
-  for (const review of reviews) {
+  for (const review of validReviews) {
     const clamped = Math.min(5, Math.max(1, Math.round(review.rating)))
     total += review.rating
     distribution[clamped - 1] += 1
   }
 
   return {
-    average: Math.round((total / reviews.length) * 10) / 10,
-    count: reviews.length,
+    average: Math.round((total / validReviews.length) * 10) / 10,
+    count: validReviews.length,
     distribution,
   }
 }

@@ -45,6 +45,10 @@ function formatPrice(value: number | null | undefined) {
   }).format(value)
 }
 
+function formatRating(value: number | null | undefined) {
+  return Number.isFinite(value) ? (value as number).toFixed(1) : "0.0"
+}
+
 export default function AddressDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -153,7 +157,7 @@ export default function AddressDetailsPage() {
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground transition hover:text-primary"
               >
                 <StarRating value={reviewSummary.average} size={14} />
-                {reviewSummary.average.toFixed(1)}
+                {formatRating(reviewSummary.average)}
                 <span className="font-normal text-muted-foreground">
                   ({reviewSummary.count})
                 </span>
