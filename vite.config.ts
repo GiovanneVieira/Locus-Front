@@ -23,7 +23,11 @@ export default defineConfig(({ mode }) => {
               target: "https://api.duffel.com",
               changeOrigin: true,
               secure: true,
-              rewrite: (requestPath) => requestPath.replace(/^\/api\/duffel/, ""),
+              rewrite: (requestPath) => {
+                const url = new URL(requestPath, "http://localhost")
+                const duffelPath = url.searchParams.get("path")
+                return duffelPath ? decodeURIComponent(duffelPath) : requestPath.replace(/^\/api\/duffel/, "")
+              },
               headers: {
                 Authorization: `Bearer ${duffelToken}`,
                 "Duffel-Version": duffelVersion,

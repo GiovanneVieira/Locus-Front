@@ -42,7 +42,12 @@ async function parseDuffelError(response: Response, fallback: string) {
 }
 
 async function duffelRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${DUFFEL_API_BASE_URL}${path}`, {
+  const isInternalProxy = DUFFEL_API_BASE_URL.startsWith("/api/duffel")
+  const requestUrl = isInternalProxy
+    ? `${DUFFEL_API_BASE_URL}?path=${encodeURIComponent(path)}`
+    : `${DUFFEL_API_BASE_URL}${path}`
+
+  const response = await fetch(requestUrl, {
     ...init,
     headers: {
       ...getDuffelHeaders(),

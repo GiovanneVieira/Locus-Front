@@ -22,6 +22,10 @@ function getDuffelVersion() {
   return process.env.DUFFEL_VERSION || process.env.VITE_DUFFEL_VERSION || "v2"
 }
 
+function getQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value
+}
+
 export default async function handler(request: VercelRequestLike, response: VercelResponseLike) {
   const token = getDuffelToken()
 
@@ -32,15 +36,17 @@ export default async function handler(request: VercelRequestLike, response: Verc
     return
   }
 
-  const incomingUrl = new URL(request.url ?? "/api/duffel", "https://locus.local")
-  const pathQuery = request.query?.path
-  const pathParts = Array.isArray(pathQuery) ? pathQuery : pathQuery ? [pathQuery] : []
-  const duffelPath = pathParts.length > 0
-    ? `/${pathParts.map(encodeURIComponent).join("/")}`
-    : incomingUrl.pathname.replace(/^\/api\/duffel/, "")
-  const duffelUrl = `${DUFFEL_API_BASE_URL}${duffelPath}${incomingUrl.search}`
+  const proxyPath = getQueryValue(request.query?.path)
+  if (!proxyPath || !proxyPath.startsWith("/")) {
+    response.status(400).json({
+      errors: [{ message: "Caminho Duffel inválido." }],
+    })
+    return
+  }
+
   const method = request.method ?? "GET"
   const body = typeof request.body === "string" ? request.body : JSON.stringify(request.body ?? {})
+  const duffelUrl = `${DUFFEL_API_BASE_URL}${proxyPath}`
 
   const duffelResponse = await fetch(duffelUrl, {
     method,
