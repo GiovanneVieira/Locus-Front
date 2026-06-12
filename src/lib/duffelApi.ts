@@ -5,7 +5,7 @@ import type {
   DuffelPlaceSuggestionsResponse,
 } from "@/lib/types"
 
-const DUFFEL_API_BASE_URL = import.meta.env.VITE_DUFFEL_API_BASE_URL ?? "/duffel-api"
+const DUFFEL_API_BASE_URL = import.meta.env.VITE_DUFFEL_API_BASE_URL ?? "/api/duffel"
 const DUFFEL_API_TOKEN = import.meta.env.VITE_DUFFEL_API_TOKEN ?? ""
 const DUFFEL_VERSION = import.meta.env.VITE_DUFFEL_VERSION ?? "v2"
 

@@ -19,11 +19,11 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: duffelToken
         ? {
-            "/duffel-api": {
+            "/api/duffel": {
               target: "https://api.duffel.com",
               changeOrigin: true,
               secure: true,
-              rewrite: (requestPath) => requestPath.replace(/^\/duffel-api/, ""),
+              rewrite: (requestPath) => requestPath.replace(/^\/api\/duffel/, ""),
               headers: {
                 Authorization: `Bearer ${duffelToken}`,
                 "Duffel-Version": duffelVersion,
