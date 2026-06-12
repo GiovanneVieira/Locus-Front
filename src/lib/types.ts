@@ -5,11 +5,135 @@ export type LucideIconType = ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
 >
 
-export interface Destiny {
-  cidade: string
-  periodo: string
-  preco: string
-  subtitulo: string
+/* =========================
+  Destinations (OpenAPI)
+  ========================= */
+
+export interface DestinationRequestDTO {
+  city: string
+  country: string
+}
+
+export interface TouristPointResponseDTO {
+  id: string
+  name: string
+  description: string
+  category: string
+}
+
+export interface DestinationResponseDTO {
+  id: string
+  country: string
+  city: string
+  touristPoints: TouristPointResponseDTO[]
+}
+
+export interface DestinationSearchParams {
+  city?: string
+  page?: number
+  size?: number
+}
+
+export interface TouristPointDTO {
+  nome: string
+  descricao: string
+  categoria: string
+}
+
+export interface DestinationAIResponse {
+  destino: string
+  pais: string
+  pontosTuristicos: TouristPointDTO[]
+}
+
+/* =========================
+  Pexels
+  ========================= */
+
+export interface PexelsPhoto {
+  id: number
+  width: number
+  height: number
+  url: string
+  photographer: string
+  alt: string
+  src: {
+    original: string
+    large2x: string
+    large: string
+    medium: string
+    small: string
+    portrait: string
+    landscape: string
+    tiny: string
+  }
+}
+
+export interface PexelsSearchResponse {
+  total_results: number
+  page: number
+  per_page: number
+  photos: PexelsPhoto[]
+}
+
+/* =========================
+  Duffel Flights
+  ========================= */
+
+export interface DuffelPlaceSuggestion {
+  id: string
+  name: string
+  iata_code: string | null
+  iata_city_code?: string | null
+  city_name?: string | null
+  country_name?: string | null
+  type?: "airport" | "city" | string
+  airports?: DuffelPlaceSuggestion[] | null
+  city?: DuffelPlaceSuggestion | null
+}
+
+export interface DuffelPlaceSuggestionsResponse {
+  data: DuffelPlaceSuggestion[]
+}
+
+export interface DuffelAirlineOwner {
+  id?: string
+  name: string
+}
+
+export interface DuffelAirportInfo {
+  iata_code?: string | null
+  name?: string | null
+  city_name?: string | null
+}
+
+export interface DuffelFlightSegment {
+  id: string
+  departing_at: string
+  arriving_at: string
+  duration?: string | null
+  origin: DuffelAirportInfo
+  destination: DuffelAirportInfo
+}
+
+export interface DuffelFlightSlice {
+  id: string
+  duration?: string | null
+  segments: DuffelFlightSegment[]
+}
+
+export interface DuffelFlightOffer {
+  id: string
+  owner: DuffelAirlineOwner
+  total_amount: string
+  total_currency: string
+  slices: DuffelFlightSlice[]
+}
+
+export interface DuffelOfferRequestResponse {
+  data: {
+    offers?: DuffelFlightOffer[]
+  }
 }
 
 export interface Indicator {

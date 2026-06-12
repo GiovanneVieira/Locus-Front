@@ -1,85 +1,19 @@
+import { useMemo, useState } from "react"
 import { Link } from "react-router"
-import { ArrowRight, Compass, Sparkles, Star, Waves } from "lucide-react"
+import { ArrowRight, Compass, Plus, Sparkles, Waves } from "lucide-react"
 
 import Header from "@/components/Header/Header"
 import { Button } from "@/components/ui/button"
 import { Hero } from "@/components/Hero"
 import { SectionBadge } from "@/components/SectionBadge"
 import { StatCard } from "@/components/StatCard"
-import { DestinationCard } from "@/components/DestinationCard"
+import { DestinationCard, DestinationCardSkeleton } from "@/components/DestinationCard"
 import { FeatureCheck } from "@/components/FeatureCheck"
 import { Footer } from "@/components/Footer"
-
-// Interfaces retomadas para garantir a tipagem do catálogo
-// Interfaces retomadas para garantir a tipagem do catálogo
-import type { Destiny } from "../lib/types"
-
-interface DestinationData extends Destiny {
-  destaque: string
-  gradiente: string
-}
-
-const destinos: DestinationData[] = [
-  {
-    cidade: "Paris",
-    subtitulo: "arte, arquitetura e experiências elegantes",
-    periodo: "Abril a junho",
-    preco: "R$ 3.180",
-    destaque: "Perfeito para roteiros visuais, gastronomia e clima agradável.",
-    gradiente:
-      "bg-[linear-gradient(145deg,rgba(98,120,255,.72),rgba(113,76,255,.32),rgba(255,255,255,.02))]",
-  },
-  {
-    cidade: "Tóquio",
-    subtitulo: "tecnologia, cultura e ritmo urbano",
-    periodo: "Março a maio",
-    preco: "R$ 4.290",
-    destaque:
-      "Combina inovação, tradição e alto impacto visual para o produto.",
-    gradiente:
-      "bg-[linear-gradient(145deg,rgba(34,197,255,.62),rgba(99,102,241,.34),rgba(255,255,255,.02))]",
-  },
-  {
-    cidade: "Roma",
-    subtitulo: "história viva e gastronomia memorável",
-    periodo: "Maio a setembro",
-    preco: "R$ 3.460",
-    destaque:
-      "Excelente para roteiros culturais e sensação de viagem clássica.",
-    gradiente:
-      "bg-[linear-gradient(145deg,rgba(255,132,84,.62),rgba(124,58,237,.24),rgba(255,255,255,.02))]",
-  },
-  {
-    cidade: "Bariloche",
-    subtitulo: "neve, inverno premium e fuga rápida",
-    periodo: "Junho a agosto",
-    preco: "R$ 2.140",
-    destaque:
-      "Ótimo destino para experiência sazonal e compra orientada por época.",
-    gradiente:
-      "bg-[linear-gradient(145deg,rgba(56,189,248,.55),rgba(168,85,247,.24),rgba(255,255,255,.02))]",
-  },
-  {
-    cidade: "Lisboa",
-    subtitulo: "charme urbano e custo mais equilibrado",
-    periodo: "Abril a outubro",
-    preco: "R$ 3.020",
-    destaque:
-      "Boa porta de entrada para viagem internacional com ótimo aproveitamento.",
-    gradiente:
-      "bg-[linear-gradient(145deg,rgba(16,185,129,.55),rgba(59,130,246,.24),rgba(255,255,255,.02))]",
-  },
-  {
-    cidade: "Santiago",
-    subtitulo: "vinhos, montanhas e decisão rápida",
-    periodo: "Março a maio",
-    preco: "R$ 1.980",
-    destaque:
-      "Rota forte para o radar de preços e viagens de custo mais acessível.",
-    gradiente:
-      "bg-[linear-gradient(145deg,rgba(244,114,182,.52),rgba(99,102,241,.24),rgba(255,255,255,.02))]",
-  },
-]
+import { CreateDestinationModal } from "@/components/CreateDestinationModal"
+import { useDestinations } from "@/hooks/useDestinations"
+import { usePexelsImagesForTerms } from "@/hooks/usePexelsImages"
+import { useCurrentUser } from "@/hooks/useAuth"
 
 const diferenciais = [
   "Leitura visual do destino antes da compra",
@@ -94,12 +28,25 @@ const checklistProximoNivel = [
 ]
 
 export default function Destinations() {
+  const [page, setPage] = useState(0)
+  const { data, isLoading } = useDestinations({ page, size: 12 })
+  const { data: currentUser } = useCurrentUser()
+  const isAdmin = currentUser?.role === "ROLE_ADMIN" || currentUser?.role === "ADMIN"
+
+  const destinations = useMemo(() => data?.content ?? [], [data])
+  const totalPages = data?.totalPages ?? 0
+
+  const cityTerms = useMemo(
+    () => destinations.map((d) => d.city),
+    [destinations],
+  )
+  const cityImages = usePexelsImagesForTerms(cityTerms, 1)
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
       <main className="overflow-hidden">
-        {/* HERO SECTION - REUTILIZANDO COMPONENTE HERO */}
         <Hero
           badge={
             <SectionBadge icon={Compass} premium>
@@ -132,7 +79,6 @@ export default function Destinations() {
           }
         />
 
-        {/* INDICADORES DE DIFERENCIAIS */}
         <section className="mx-auto max-w-7xl px-6 pb-20">
           <div className="grid gap-5 md:grid-cols-3">
             {diferenciais.map((item) => (
@@ -141,29 +87,71 @@ export default function Destinations() {
           </div>
         </section>
 
-        {/* VITRINE DE DESTINOS */}
         <section className="mx-auto max-w-7xl px-6 pb-24">
-          <div className="mb-8 flex items-center gap-3">
-            <Waves size={18} className="text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">
-              Seleção premium de experiências
-            </span>
+          <div className="mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Waves size={18} className="text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">
+                Seleção premium de experiências
+              </span>
+            </div>
+            {isAdmin && <CreateDestinationModal />}
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {destinos.map((dest) => (
-              <DestinationCard
-                key={dest.cidade}
-                {...dest}
-                highlight={dest.destaque}
-              />
-            ))}
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <DestinationCardSkeleton key={i} />
+                ))
+              : destinations.map((dest, i) => (
+                  <DestinationCard
+                    key={dest.id}
+                    destination={dest}
+                    gradientIndex={i}
+                    coverImageUrl={cityImages[dest.city]?.[0]?.src?.landscape}
+                  />
+                ))}
           </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+              >
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {page + 1} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Próximo
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && destinations.length === 0 && (
+            <div className="glass-card mx-auto max-w-md p-12 text-center">
+              <Compass size={48} className="mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold">Nenhum destino encontrado</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Novos destinos serão adicionados em breve.
+              </p>
+              {isAdmin && <CreateDestinationModal className="mt-4" />}
+            </div>
+          )}
 
           <div className="glass-card mt-10 p-8">
             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
-                <SectionBadge icon={Star} className="mb-4">
+                <SectionBadge icon={Plus} className="mb-4">
                   Próximo nível do produto
                 </SectionBadge>
                 <h3 className="text-3xl font-semibold tracking-tight md:text-4xl">

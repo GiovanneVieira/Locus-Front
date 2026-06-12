@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { Link } from "react-router"
 import {
   ArrowRight,
@@ -22,35 +23,16 @@ import Header from "@/components/Header/Header"
 import { Button } from "@/components/ui/button"
 import { SectionBadge } from "@/components/SectionBadge"
 import { StatCard } from "@/components/StatCard"
-import { DestinationCard } from "@/components/DestinationCard"
+import { DestinationCard, DestinationCardSkeleton } from "@/components/DestinationCard"
 import { ExperiencePanel } from "@/components/ExperiencePanel"
 import { Footer } from "@/components/Footer"
-import type { Destiny, Differential, Indicator, Step } from "../lib/types"
+import type { Differential, Indicator, Step } from "../lib/types"
 import { AlertCard } from "@/components/AlertCard.tsx"
 import { FeatureCheck } from "@/components/FeatureCheck.tsx"
 import { StepCard } from "@/components/StepCard.tsx"
 import { InfoCard } from "@/components/InfoCard.tsx"
-
-const destinos: Destiny[] = [
-  {
-    cidade: "Paris",
-    subtitulo: "arte, elegância e roteiros icônicos",
-    periodo: "Abril a junho",
-    preco: "a partir de R$ 3.180",
-  },
-  {
-    cidade: "Tóquio",
-    subtitulo: "futuro, cultura e experiência urbana",
-    periodo: "Março a maio",
-    preco: "a partir de R$ 4.290",
-  },
-  {
-    cidade: "Roma",
-    subtitulo: "história viva e gastronomia memorável",
-    periodo: "Maio a setembro",
-    preco: "a partir de R$ 3.460",
-  },
-]
+import { useDestinations } from "@/hooks/useDestinations"
+import { usePexelsImagesForTerms } from "@/hooks/usePexelsImages"
 
 const indicadores: Indicator[] = [
   {
@@ -124,12 +106,20 @@ const alertas = [
 ]
 
 export default function Home() {
+  const { data, isLoading } = useDestinations({ page: 0, size: 3 })
+  const featuredDestinations = useMemo(() => data?.content ?? [], [data])
+
+  const cityTerms = useMemo(
+    () => featuredDestinations.map((d) => d.city),
+    [featuredDestinations],
+  )
+  const cityImages = usePexelsImagesForTerms(cityTerms, 1)
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
       <main className="overflow-hidden">
-        {/* HERO SECTION COMPLETA */}
         <section className="relative">
           <div className="pointer-events-none absolute inset-0">
             <div className="hero-orb top-[80px] left-[-90px]" />
@@ -225,20 +215,18 @@ export default function Home() {
             </Button>
           </div>
           <div className="grid gap-5 lg:grid-cols-3">
-            {destinos.map((dest, i) => (
-              <DestinationCard
-                key={dest.cidade}
-                {...dest}
-                gradiente={
-                  i === 0
-                    ? "bg-[linear-gradient(145deg,rgba(98,120,255,.72),rgba(113,76,255,.32),rgba(255,255,255,.02))]"
-                    : i === 1
-                      ? "bg-[linear-gradient(145deg,rgba(34,197,255,.62),rgba(99,102,241,.34),rgba(255,255,255,.02))]"
-                      : "bg-[linear-gradient(145deg,rgba(255,132,84,.62),rgba(124,58,237,.24),rgba(255,255,255,.02))]"
-                }
-                highlight={""}
-              />
-            ))}
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <DestinationCardSkeleton key={i} />
+                ))
+              : featuredDestinations.slice(0, 3).map((dest, i) => (
+                  <DestinationCard
+                    key={dest.id}
+                    destination={dest}
+                    gradientIndex={i}
+                    coverImageUrl={cityImages[dest.city]?.[0]?.src?.landscape}
+                  />
+                ))}
           </div>
         </section>
         {/* SEÇÃO SENSORIAL E ALERTAS */}
