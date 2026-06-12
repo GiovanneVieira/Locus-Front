@@ -8,6 +8,7 @@ import AddressesPage from "@/pages/Addresses"
 import AdminPage from "@/pages/Admin"
 import BecomeHostPage from "@/pages/BecomeHost"
 import DashboardPage from "@/pages/Dashboard"
+import DestinationDetailPage from "@/pages/DestinationDetail"
 import Destinations from "@/pages/Destinations"
 import HeuristicsPage from "@/pages/Heuristics"
 import Home from "@/pages/Home"
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", Component: Home },
       { path: "/destinos", Component: Destinations },
+      { path: "/destinos/:city", Component: DestinationDetailPage },
       { path: "/radar", Component: RadarPage },
       { path: "/milhas", Component: MilesPage },
       { path: "/planejamento", Component: PlanningPage },

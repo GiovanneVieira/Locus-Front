@@ -17,12 +17,17 @@ import type {
   CreateAddressPayload,
   CreateBookingPayload,
   CreateReviewPayload,
+  DestinationAIResponse,
+  DestinationRequestDTO,
+  DestinationResponseDTO,
+  DestinationSearchParams,
   ForgotPasswordDTO,
   ImageDetailsResponse,
   OtpResponse,
   PageCriticalFailureMetricResponseDTO,
   PageLoginAccessMetricResponseDTO,
   PagedResponse,
+  PexelsSearchResponse,
   RegisterPayload,
   RentableAddressDetailResponse,
   RentableAddressesParams,
@@ -311,6 +316,21 @@ export async function deletePersonalAddress(id: string) {
   return request<void>(`/address/personal/${id}`, { method: "DELETE" })
 }
 
+export async function deleteRentableAddressImage(imageId: string) {
+  return request<void>(`/s3/rentable-address/image/${imageId}`, { method: "DELETE" })
+}
+
+export async function fetchAddressComments(addressId: string) {
+  return request<Record<string, unknown>>(`/address/rentable/comment/${addressId}`)
+}
+
+export async function createAddressComment(payload: { addressId: string; comment: string; userId: string }) {
+  return request<Record<string, unknown>>("/address/rentable/comment", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
 /* ========== Upload de imagens (S3) ========== */
 
 /**
@@ -500,14 +520,14 @@ export async function fetchAdminAudit(params?: { page?: number; size?: number })
   return request<PagedResponse<AdminAuditEntry>>(`/admin/audit${qs}`)
 }
 
-/* ========== Avaliações (reviews) ========== */
+/* ========== Avaliações (reviews/ratings) ========== */
 
 export async function fetchReviews(addressId: string) {
-  return request<Review[]>(`/reviews/address/${addressId}`)
+  return request<Review[]>(`/address/rentable/rating/${addressId}`)
 }
 
 export async function createReview(addressId: string, payload: CreateReviewPayload) {
-  return request<Review>(`/reviews/address/${addressId}`, {
+  return request<Review>(`/address/rentable/rating/${addressId}`, {
     method: "POST",
     body: JSON.stringify(payload),
   })
@@ -515,6 +535,10 @@ export async function createReview(addressId: string, payload: CreateReviewPaylo
 
 export async function deleteReview(reviewId: string) {
   return request<void>(`/reviews/${reviewId}`, { method: "DELETE" })
+}
+
+export async function fetchAverageRating(addressId: string) {
+  return request<{ ratingValue: number }>(`/address/rentable/rating/avg/${addressId}`)
 }
 
 /* ========== Reservas (rentals) ========== */
@@ -539,5 +563,64 @@ export async function updateBookingStatus(bookingId: string, status: BookingStat
     method: "PATCH",
     body: JSON.stringify({ status }),
   })
+}
+
+/* ========== Destinations ========== */
+
+export async function fetchDestinations(params?: DestinationSearchParams) {
+  const qs = buildQueryString({ page: params?.page, size: params?.size, city: params?.city })
+  return request<PagedResponse<DestinationResponseDTO>>(`/destinations${qs}`)
+}
+
+export async function fetchDestinationById(id: string) {
+  return request<DestinationResponseDTO>(`/destinations/${id}`)
+}
+
+export async function fetchDestinationByCity(city: string) {
+  return request<DestinationResponseDTO>(`/destinations/city/${encodeURIComponent(city)}`)
+}
+
+export async function createDestination(payload: DestinationRequestDTO) {
+  return request<DestinationResponseDTO>("/destinations", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateDestination(id: string, payload: DestinationRequestDTO) {
+  return request<DestinationResponseDTO>(`/destinations/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteDestination(id: string) {
+  return request<void>(`/destinations/${id}`, { method: "DELETE" })
+}
+
+export async function fetchDestinationRecommendations(city: string) {
+  const qs = buildQueryString({ city })
+  return request<DestinationAIResponse>(`/ai/destinations/recommendations${qs}`)
+}
+
+/* ========== Pexels ========== */
+
+const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY ?? ""
+
+export async function fetchPexelsImages(query: string, perPage = 4): Promise<PexelsSearchResponse> {
+  if (!PEXELS_API_KEY) {
+    return { total_results: 0, page: 1, per_page: perPage, photos: [] }
+  }
+
+  const params = new URLSearchParams({ query, per_page: String(perPage) })
+  const response = await fetch(`https://api.pexels.com/v1/search?${params.toString()}`, {
+    headers: { Authorization: PEXELS_API_KEY },
+  })
+
+  if (!response.ok) {
+    return { total_results: 0, page: 1, per_page: perPage, photos: [] }
+  }
+
+  return response.json() as Promise<PexelsSearchResponse>
 }
 
