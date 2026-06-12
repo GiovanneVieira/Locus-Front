@@ -1,9 +1,12 @@
 import type {
   ActivateUserPayload,
   Address,
+  AddressResponseDTO,
   AddressSearchParams,
   AdminAuditEntry,
   AdminMetrics,
+  AdminMetricsPageParams,
+  AdminMetricsParams,
   AdminUser,
   AdminUsersSearchParams,
   AuthPayload,
@@ -17,13 +20,20 @@ import type {
   ForgotPasswordDTO,
   ImageDetailsResponse,
   OtpResponse,
+  PageCriticalFailureMetricResponseDTO,
+  PageLoginAccessMetricResponseDTO,
   PagedResponse,
   RegisterPayload,
   RentableAddressDetailResponse,
+  RentableAddressesParams,
+  PersonalAddressRequestDTO,
   Review,
+  S3UploadResponse,
   SendOtpPayload,
   UpdateAddressPayload,
   UpdateUserPayload,
+  UserRequestDTO,
+  UserResponseDTO,
   UserSession,
   VerifyOtpPayload,
 } from "@/lib/types"
@@ -107,7 +117,12 @@ async function request<T>(path: string, init?: RequestInit, retryOnUnauthorized 
     return undefined as T
   }
 
-  return (await response.json()) as T
+  const text = await response.text()
+  if (!text) {
+    return undefined as T
+  }
+
+  return JSON.parse(text) as T
 }
 
 export function getApiBaseUrl() {
@@ -125,7 +140,7 @@ export async function login(payload: AuthPayload) {
 }
 
 export async function preRegister(payload: RegisterPayload) {
-  return request<AuthResponse>(
+  return request<UserResponseDTO>(
     "/auth/register",
     { method: "POST", body: JSON.stringify(payload) },
     false
@@ -160,6 +175,32 @@ export async function fetchCurrentUser() {
   return request<UserSession>("/user/me")
 }
 
+export async function fetchUsers() {
+  return request<Record<string, unknown>>("/user")
+}
+
+export async function fetchUserById(id: string) {
+  return request<Record<string, unknown>>(`/user/${id}`)
+}
+
+export async function createUser(payload: UserRequestDTO) {
+  return request<Record<string, unknown>>("/user", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateUser(id: string, payload: UserRequestDTO) {
+  return request<Record<string, unknown>>(`/user/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteUserById(id: string) {
+  return request<Record<string, unknown>>(`/user/${id}`, { method: "DELETE" })
+}
+
 export async function updateCurrentUser(payload: UpdateUserPayload) {
   return request<UserSession>("/user/me", {
     method: "PATCH",
@@ -172,7 +213,10 @@ export async function becomeHost() {
 }
 
 export async function enableUser(payload: ActivateUserPayload) {
-  return request<ActivateUserPayload>("/user/enable", { method: "POST" , body: JSON.stringify(payload)})
+  return request<Record<string, unknown>>("/user/enable", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
 }
 
 export async function forgotPassword(payload: ForgotPasswordDTO) {
@@ -187,6 +231,14 @@ function buildQueryString(params: Record<string, unknown> | undefined) {
 
   for (const [key, value] of Object.entries(params)) {
     if (value === undefined || value === null || value === "") continue
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item !== undefined && item !== null && item !== "") {
+          search.append(key, String(item))
+        }
+      })
+      continue
+    }
     search.append(key, String(value))
   }
 
@@ -194,8 +246,8 @@ function buildQueryString(params: Record<string, unknown> | undefined) {
   return qs ? `?${qs}` : ""
 }
 
-export async function fetchAddresses(params?: AddressSearchParams) {
-  const qs = buildQueryString(params as Record<string, unknown>)
+export async function fetchAddresses(params?: RentableAddressesParams | AddressSearchParams) {
+  const qs = buildQueryString({ page: params?.page, size: params?.size })
   return request<PagedResponse<Address>>(`/address/rentable${qs}`)
 }
 
@@ -204,7 +256,11 @@ export async function fetchMyAddresses() {
 }
 
 export async function fetchAddressByUserId(id: string) {
-  return request<Address>(`/address/rentable/user/${id}`)
+  return fetchPersonalAddressByUserId(id)
+}
+
+export async function fetchPersonalAddressByUserId(id: string) {
+  return request<AddressResponseDTO>(`/address/personal/${id}`)
 }
 
 export async function fetchRentableAddressById(id: string) {
@@ -213,10 +269,7 @@ export async function fetchRentableAddressById(id: string) {
 
 
 export async function createAddress(payload: CreateAddressPayload) {
-  return request<Address>("/addresses", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  })
+  return createPersonalAddress(payload as PersonalAddressRequestDTO)
 }
 export function getRentableAddressImageUrl(imageId: string): string {
   return `${API_BASE_URL}/s3/rentable-address/image/${imageId}/content`
@@ -224,6 +277,13 @@ export function getRentableAddressImageUrl(imageId: string): string {
 
 export async function createRentableAddress(payload: CreateAddressPayload) {
   return request<Address>("/address/rentable", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createPersonalAddress(payload: PersonalAddressRequestDTO) {
+  return request<AddressResponseDTO>("/address/personal", {
     method: "POST",
     body: JSON.stringify(payload),
   })
@@ -237,18 +297,18 @@ export async function updateRentableAddress(id: string, payload: UpdateAddressPa
 }   
 
 export async function updatePersonalAddress(id: string, payload: UpdateAddressPayload) {
-  return request<Address>(`/address/personal/${id}`, {
+  return request<AddressResponseDTO>(`/address/personal/${id}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   })
 }  
 
 export async function deleteRentableAddress(id: string) {
-  return request<{ message: string }>(`/address/rentable/${id}`, { method: "DELETE" })
+  return request<void>(`/address/rentable/${id}`, { method: "DELETE" })
 }
 
 export async function deletePersonalAddress(id: string) {
-  return request<{ message: string }>(`/address/personal/${id}`, { method: "DELETE" })
+  return request<void>(`/address/personal/${id}`, { method: "DELETE" })
 }
 
 /* ========== Upload de imagens (S3) ========== */
@@ -279,6 +339,91 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   return data.urls ?? []
 }
 
+function looksLikeFileReference(value: string): boolean {
+  if (!value || !value.trim()) return false
+  return !/\s/.test(value.trim())
+}
+
+function extractUploadReference(data: S3UploadResponse | string): string {
+  if (typeof data === "string") {
+    return looksLikeFileReference(data) ? data : ""
+  }
+
+  if (data.data && typeof data.data === "object") {
+    const nested = extractUploadReference(data.data)
+    if (nested) return nested
+  }
+
+  const candidates: (string | undefined)[] = [
+    data.s3Key,
+    data.key,
+    data.fileName,
+    data.filename,
+    data.originalName,
+    data.fileUrl,
+    data.url,
+  ]
+
+  for (const candidate of candidates) {
+    if (candidate && looksLikeFileReference(candidate)) {
+      return candidate
+    }
+  }
+
+  return ""
+}
+
+export async function fetchS3FileUrl(fileName: string) {
+  const qs = buildQueryString({ fileName })
+  const data = await request<S3UploadResponse | string>(`/s3/get/file-url${qs}`)
+  return extractUploadReference(data)
+}
+
+export async function uploadProfileImage(file: File) {
+  const formData = new FormData()
+  formData.append("file", file)
+
+  const response = await fetch(`${API_BASE_URL}/s3/upload`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const message = await parseErrorMessage(response, "Falha ao enviar foto de perfil")
+    throw new ApiError(message, response.status)
+  }
+
+  const text = await response.text()
+  let parsed: unknown = undefined
+  if (text) {
+    try {
+      parsed = JSON.parse(text)
+    } catch {
+      parsed = text
+    }
+  }
+
+  const data: S3UploadResponse | string =
+    typeof parsed === "object" && parsed !== null
+      ? (parsed as S3UploadResponse)
+      : typeof parsed === "string"
+        ? parsed
+        : ""
+
+  const reference = extractUploadReference(data)
+
+  if (!reference) {
+    throw new ApiError("Upload concluído, mas o servidor não retornou a referência do arquivo.", 0)
+  }
+
+  if (/^https?:\/\//.test(reference)) {
+    return reference
+  }
+
+  return await fetchS3FileUrl(reference)
+}
+
 export async function uploadRentableAddressImages(files: File[]): Promise<ImageDetailsResponse[]> {
   if (files.length === 0) return [];
 
@@ -302,8 +447,19 @@ export async function uploadRentableAddressImages(files: File[]): Promise<ImageD
 
 /* ========== Admin ========== */
 
-export async function fetchAdminMetrics() {
-  return request<AdminMetrics>("/admin/metrics")
+export async function fetchAdminMetrics(params?: AdminMetricsParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<AdminMetrics>(`/admin/metrics${qs}`)
+}
+
+export async function fetchAdminCriticalFailures(params?: AdminMetricsPageParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PageCriticalFailureMetricResponseDTO>(`/admin/metrics/critical-failures${qs}`)
+}
+
+export async function fetchAdminAccessLogs(params?: AdminMetricsPageParams) {
+  const qs = buildQueryString(params as Record<string, unknown>)
+  return request<PageLoginAccessMetricResponseDTO>(`/admin/metrics/access-logs${qs}`)
 }
 
 export async function fetchAdminUsers(params?: AdminUsersSearchParams) {

@@ -452,7 +452,7 @@ export default function NewAddressPage() {
                                                             .value;
                                                     const cleaned =
                                                         rawValue.replace(
-                                                            /[^A-Za-z0-9\/\s-]/g,
+                                                            /[^A-Za-z0-9/\s-]/g,
                                                             '',
                                                         );
                                                     field.handleChange(

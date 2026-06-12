@@ -67,26 +67,38 @@ export interface AuthResponse {
   accessToken: string
 }
 
-export type UserRole = "COMMON" | "HOST" | "ADMIN"
+export type UserRole = "ROLE_USER" | "ROLE_HOST" | "ROLE_ADMIN" | "COMMON" | "HOST" | "ADMIN"
 
-export interface UserSession {
+export interface UserRequestDTO {
+  name?: string
+  email?: string
+  password?: string
+  phone?: string | null
+  bio?: string | null
+  pfpUrl?: string | null
+}
+
+export interface UserResponseDTO {
   id: string
   name: string
   email: string
   role: UserRole | string
-  phone?: string | null
-  bio?: string | null
-  pfpUrl?: string | null
-  host?: boolean
   createdAt: string
   updatedAt: string | null
+  pfpUrl?: string | null
+}
+
+export interface UserSession extends UserResponseDTO {
+  phone?: string | null
+  bio?: string | null
+  host?: boolean
 }
 
 export interface UpdateUserPayload {
-  name?: string
-  phone?: string | null
-  bio?: string | null
-  pfpUrl?: string | null
+  name: string
+  phone: string | null
+  bio: string | null
+  pfpUrl: string | null
 }
 
 export interface ForgotPasswordDTO{
@@ -95,22 +107,28 @@ export interface ForgotPasswordDTO{
   password: string
 }
 
+export type ActivateUserDTO = ActivateUserPayload
+
 export interface ActivateUserPayload{
   email: string
 }
 
-export interface Address {
+export interface AddressResponseDTO {
   id: string
-  title: string
-  description?: string | null
   street: string
   houseNumber: string
-  complement?: string | null
   neighborhood: string
   city: string
   state: string
   country: string
   cep: string
+  isRentable: boolean
+}
+
+export interface Address extends AddressResponseDTO {
+  title: string
+  description?: string | null
+  complement?: string | null
   latitude?: number | null
   longitude?: number | null
   pricePerNight?: number | null
@@ -128,6 +146,38 @@ export interface Address {
   updatedAt: string | null
 }
 
+export interface AddressRequestDTO {
+  street: string
+  number: string
+  neighborhood: string
+  city: string
+  state: string
+  country: string
+  zipCode: string
+  type: string
+}
+
+export interface RentableAddressRequestDTO extends AddressRequestDTO {
+  type: "RENTABLE" | string
+  title: string
+  description: string
+  pricePerNight: number
+  maxGuests: number
+  availableFrom: string
+  availableTo: string
+  imageIds: string[]
+  mainImageId: string
+  complement?: string | null
+  amenities?: string[]
+  latitude?: number | null
+  longitude?: number | null
+}
+
+export interface PersonalAddressRequestDTO extends AddressRequestDTO {
+  type: "PERSONAL" | string
+  addressName?: string
+}
+
 export interface CreateAddressPayload {
   title: string
   street: string
@@ -138,11 +188,9 @@ export interface CreateAddressPayload {
   country: string
   zipCode: string
   type: "PERSONAL" | "RENTABLE"
-  
-  imageIds: string[]          // Array de UUIDs das imagens órfãs prontas para adoção
-  mainImageId?: string        // ID da imagem escolhida para ser a capa do card
+  imageIds: string[]
+  mainImageId?: string
 
-  // ---- CAMPOS OPCIONAIS / NEGÓCIO DE LOCAÇÃO ----
   description?: string | null
   complement?: string | null
   pricePerNight?: number | null
@@ -191,7 +239,12 @@ export interface RentableAddressDetailResponse {
 
 export type UpdateAddressPayload = Partial<CreateAddressPayload>
 
-export interface AddressSearchParams {
+export interface RentableAddressesParams {
+  page?: number
+  size?: number
+}
+
+export interface AddressSearchParams extends RentableAddressesParams {
   query?: string
   city?: string
   state?: string
@@ -208,12 +261,49 @@ export interface ImageDetailsResponse {
   s3Key: string;
 }
 
+export interface S3UploadResponse {
+  url?: string
+  fileUrl?: string
+  fileName?: string
+  filename?: string
+  key?: string
+  s3Key?: string
+  message?: string
+  originalName?: string
+  id?: string
+  data?: S3UploadResponse
+}
+
 export interface PagedResponse<T> {
   content: T[]
-  page: number
+  page?: number
+  number?: number
   size: number
   totalElements: number
   totalPages: number
+  first?: boolean
+  last?: boolean
+  numberOfElements?: number
+  empty?: boolean
+  pageable?: PageableObject
+  sort?: SortObject[]
+}
+
+export interface PageableObject {
+  paged: boolean
+  pageNumber: number
+  pageSize: number
+  offset: number
+  sort: SortObject[]
+  unpaged: boolean
+}
+
+export interface SortObject {
+  direction: string
+  nullHandling: string
+  ascending: boolean
+  property: string
+  ignoreCase: boolean
 }
 
 /* =========================
@@ -238,16 +328,106 @@ export interface OtpResponse {
    Admin
    ========================= */
 
-export interface AdminMetrics {
-  totalUsers: number
-  totalHosts: number
-  totalAdmins: number
-  totalAddresses: number
-  newUsersLast7Days: number
-  newAddressesLast7Days: number
-  activeUsers?: number
-  blockedUsers?: number
+export type AdminMetricsGranularity = "day" | "week" | "month" | string
+
+export interface AdminMetricsParams {
+  start?: string
+  end?: string
+  granularity?: AdminMetricsGranularity
 }
+
+export interface AdminMetricsPageParams {
+  start?: string
+  end?: string
+  page?: number
+  size?: number
+  sort?: string[]
+}
+
+export interface MetricCountDTO {
+  label: string
+  total: number
+}
+
+export interface TimeBucketMetricDTO {
+  bucket: string
+  total: number
+}
+
+export interface UserAcquisitionMetricsDTO {
+  newUsersDaily: number
+  newUsersWeekly: number
+  newUsersMonthly: number
+  activatedUsersInRange: number
+  registrationSeries: TimeBucketMetricDTO[]
+}
+
+export interface AccessPlatformMetricsDTO {
+  successfulLogins: number
+  failedLogins: number
+  deviceDistribution: MetricCountDTO[]
+  operatingSystemDistribution: MetricCountDTO[]
+}
+
+export interface RentalConversionMetricsDTO {
+  createdRentals: number
+  confirmedRentals: number
+  conversionRate: number
+}
+
+export interface StorageUploadMetricsDTO {
+  uploadedImages: number
+  totalBytes: number
+  averageBytes: number
+}
+
+export interface CriticalFailureMetricsDTO {
+  totalFailures: number
+  failuresByType: MetricCountDTO[]
+}
+
+export interface AdminMetricsOverviewDTO {
+  start: string
+  end: string
+  users: UserAcquisitionMetricsDTO
+  accessPlatforms: AccessPlatformMetricsDTO
+  rentals: RentalConversionMetricsDTO
+  storageUploads: StorageUploadMetricsDTO
+  criticalFailures: CriticalFailureMetricsDTO
+}
+
+export type AdminMetrics = AdminMetricsOverviewDTO
+
+export type CriticalFailureType =
+  | "LOGIN_INVALID"
+  | "OTP_EXPIRED"
+  | "OTP_INVALID"
+  | "OTP_TOKEN_INVALID"
+
+export interface CriticalFailureMetricResponseDTO {
+  id: string
+  email: string
+  failureType: CriticalFailureType
+  reason: string
+  occurredAt: string
+}
+
+export type DeviceType = "MOBILE" | "WEB" | "UNKNOWN"
+
+export interface LoginAccessMetricResponseDTO {
+  id: string
+  userId: string
+  email: string
+  success: boolean
+  reason: string
+  deviceType: DeviceType
+  operatingSystem: string
+  occurredAt: string
+}
+
+export type PageCriticalFailureMetricResponseDTO = PagedResponse<CriticalFailureMetricResponseDTO>
+
+export type PageLoginAccessMetricResponseDTO = PagedResponse<LoginAccessMetricResponseDTO>
 
 export interface AdminUser extends UserSession {
   blocked?: boolean

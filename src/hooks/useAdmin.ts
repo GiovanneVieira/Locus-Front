@@ -7,7 +7,6 @@ import {
   deleteUser,
   fetchAdminAddresses,
   fetchAdminAudit,
-  fetchAdminMetrics,
   fetchAdminUsers,
   unblockUser,
 } from "@/lib/api"
@@ -17,23 +16,21 @@ import type {
   ChangeUserRolePayload,
 } from "@/lib/types"
 
+export {
+  adminMetricKeys,
+  useAdminAccessLogs,
+  useAdminCriticalFailures,
+  useAdminMetrics,
+} from "@/hooks/useAdminMetrics"
+
 export const adminKeys = {
   all: ["admin"] as const,
-  metrics: ["admin", "metrics"] as const,
   users: (params?: AdminUsersSearchParams) =>
     ["admin", "users", params ?? {}] as const,
   addresses: (params?: AddressSearchParams) =>
     ["admin", "addresses", params ?? {}] as const,
   audit: (params?: { page?: number; size?: number }) =>
     ["admin", "audit", params ?? {}] as const,
-}
-
-export function useAdminMetrics() {
-  return useQuery({
-    queryKey: adminKeys.metrics,
-    queryFn: fetchAdminMetrics,
-    staleTime: 60_000,
-  })
 }
 
 export function useAdminUsers(params?: AdminUsersSearchParams) {

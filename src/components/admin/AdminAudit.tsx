@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { AdminSecurityEvents } from "@/components/admin/AdminSecurityEvents"
 import { useAdminAudit } from "@/hooks/useAdmin"
 
 const PAGE_SIZE = 20
@@ -70,6 +71,8 @@ export default function AdminAudit() {
           </Button>
         </div>
       ) : null}
+
+      <AdminSecurityEvents />
 
       <div className="overflow-hidden rounded-3xl border border-border bg-secondary/50">
         <div className="flex items-center justify-between border-b border-border px-5 py-3 text-xs text-muted-foreground">

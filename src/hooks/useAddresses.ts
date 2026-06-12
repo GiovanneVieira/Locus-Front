@@ -1,10 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  createPersonalAddress,
   createRentableAddress,
+  deletePersonalAddress,
   fetchRentableAddressById,
   fetchAddresses,
   fetchMyAddresses,
+  fetchPersonalAddressByUserId,
+  updatePersonalAddress,
   updateRentableAddress,
   uploadImages,
   uploadRentableAddressImages,
@@ -14,19 +18,22 @@ import {
 import type {
   AddressSearchParams,
   CreateAddressPayload,
+  PersonalAddressRequestDTO,
+  RentableAddressesParams,
   RentableAddressImageResponse,
   UpdateAddressPayload,
 } from "@/lib/types"
 
 export const addressKeys = {
   all: ["addresses"] as const,
-  list: (params?: AddressSearchParams) =>
+  list: (params?: RentableAddressesParams | AddressSearchParams) =>
     ["addresses", "list", params ?? {}] as const,
   mine: ["addresses", "mine"] as const,
   detail: (id: string) => ["addresses", "detail", id] as const,
+  personalByUser: (id: string) => ["addresses", "personal", "user", id] as const,
 }
 
-export function useAddresses(params?: AddressSearchParams) {
+export function useAddresses(params?: RentableAddressesParams | AddressSearchParams) {
   return useQuery({
     queryKey: addressKeys.list(params),
     queryFn: () => fetchAddresses(params),
@@ -49,11 +56,30 @@ export function useAddress(id: string | undefined) {
   })
 }
 
+export function usePersonalAddressByUserId(id: string | undefined) {
+  return useQuery({
+    queryKey: addressKeys.personalByUser(id ?? ""),
+    queryFn: () => fetchPersonalAddressByUserId(id as string),
+    enabled: Boolean(id),
+  })
+}
+
 export function useCreateAddress() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (payload: CreateAddressPayload) => createRentableAddress(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: addressKeys.all })
+    },
+  })
+}
+
+export function useCreatePersonalAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: PersonalAddressRequestDTO) => createPersonalAddress(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: addressKeys.all })
     },
@@ -72,11 +98,34 @@ export function useUpdateRentableAddress(id: string) {
   })
 }
 
+export function useUpdatePersonalAddress(id: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: UpdateAddressPayload) => updatePersonalAddress(id, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: addressKeys.all })
+      await queryClient.invalidateQueries({ queryKey: addressKeys.detail(id) })
+    },
+  })
+}
+
 export function useDeleteRentableAddress() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => deleteRentableAddress(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: addressKeys.all })
+    },
+  })
+}
+
+export function useDeletePersonalAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => deletePersonalAddress(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: addressKeys.all })
     },

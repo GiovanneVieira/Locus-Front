@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useForm, useStore } from '@tanstack/react-form';
 import {
@@ -122,7 +122,6 @@ export default function EditAddressPage() {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [pendingValues, setPendingValues] = useState<FormValues | null>(null);
-    const [isGalleryInitialized, setIsGalleryInitialized] = useState(false);
 
     const fetchCoordinates = async (value: FormValues): Promise<{ lat: number; lng: number } | null> => {
         try {
@@ -154,7 +153,7 @@ export default function EditAddressPage() {
         if (updateMutation.isSuccess) return true;
         if (!currentUser?.id || !address) return false;
 
-        const rawHostId = address.hostId ?? (address as any).host?.id;
+        const rawHostId = address.hostId ?? ((address as unknown as Record<string, { id: string } | undefined>).host)?.id;
         if (!rawHostId) return false;
 
         const loggedUserId = String(currentUser.id).trim().toLowerCase();
@@ -165,27 +164,15 @@ export default function EditAddressPage() {
 
     const resolvedUrls = useRentableAddressImages(address?.images);
 
-    useEffect(() => {
-        if (
-            address?.images &&
-            resolvedUrls.length > 0 &&
-            !isGalleryInitialized
-        ) {
-            const formattedImages: UploaderImage[] =
-                address.images.map((img, index) => ({
-                    id: img.id,
-                    url: resolvedUrls[index],
-                    remote: true,
-                }));
-
-            setImages(formattedImages);
-            setIsGalleryInitialized(true);
-        }
-    }, [address?.images, resolvedUrls, isGalleryInitialized]);
-
-    useEffect(() => {
-        setIsGalleryInitialized(false);
-    }, [id]);
+    const galleryInitialized = useMemo(() => {
+        if (!address?.images || resolvedUrls.length === 0) return images;
+        return address.images.map((img, index) => ({
+            id: img.id,
+            url: resolvedUrls[index],
+            remote: true,
+        }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [address?.images, resolvedUrls]);
 
     const formValuesInitial = useMemo<FormValues>(() => {
         if (!address)
@@ -487,7 +474,7 @@ export default function EditAddressPage() {
                                                 maxLength={10}
                                                 onChange={(event) => {
                                                     const rawValue = event.target.value;
-                                                    const cleaned = rawValue.replace(/[^A-Za-z0-9\/\s-]/g, '');
+                                                    const cleaned = rawValue.replace(/[^A-Za-z0-9/\s-]/g, '');
                                                     field.handleChange(cleaned);
                                                 }}
                                                 onBlur={field.handleBlur}
@@ -716,7 +703,7 @@ export default function EditAddressPage() {
                             title="Imagens do imóvel"
                             description="Fotos do espaço.">
                             <ImageUploader
-                                images={images}
+                                images={images.length > 0 ? images : galleryInitialized}
                                 onChange={setImages}
                                 externalError={
                                     uploadMutation.error instanceof Error

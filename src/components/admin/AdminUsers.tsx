@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useState } from "react"
 import {
   BadgeCheck,
+  Ban,
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Lock,
   Search,
   ShieldCheck,
-  Trash2,
-  Unlock,
   UserRound,
 } from "lucide-react"
 
+import { AdminUserOperations } from "@/components/admin/AdminUserOperations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useCurrentUser } from "@/hooks/useAuth"
@@ -85,10 +84,6 @@ export default function AdminUsers() {
     [debouncedQuery, role, page]
   )
 
-  useEffect(() => {
-    setPage(0)
-  }, [debouncedQuery, role])
-
   const { data, isLoading, isFetching, isError, error, refetch } = useAdminUsers(params)
 
   const changeRole = useChangeUserRole()
@@ -132,11 +127,6 @@ export default function AdminUsers() {
   }
 
   async function handleDelete(user: AdminUser) {
-    const confirmed = window.confirm(
-      `Excluir a conta de ${user.name}? Esta ação não pode ser desfeita.`
-    )
-    if (!confirmed) return
-
     setFeedback(null)
     try {
       await deleteUser.mutateAsync(user.id)
@@ -147,6 +137,16 @@ export default function AdminUsers() {
         message: err instanceof ApiError ? err.message : "Não foi possível excluir.",
       })
     }
+  }
+
+  function handleQueryChange(value: string) {
+    setQuery(value)
+    setPage(0)
+  }
+
+  function handleRoleFilterChange(value: UserRole | "") {
+    setRole(value)
+    setPage(0)
   }
 
   return (
@@ -164,7 +164,7 @@ export default function AdminUsers() {
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => handleQueryChange(event.target.value)}
               placeholder="Buscar por nome ou email"
               className="w-full rounded-full border-border bg-secondary/50 pl-9 sm:w-64"
             />
@@ -174,7 +174,7 @@ export default function AdminUsers() {
               <button
                 key={option.value || "all"}
                 type="button"
-                onClick={() => setRole(option.value)}
+                onClick={() => handleRoleFilterChange(option.value)}
                 className={`rounded-full px-3 py-1 font-medium transition-colors ${
                   role === option.value
                     ? "bg-primary text-primary-foreground"
@@ -280,7 +280,7 @@ export default function AdminUsers() {
                         ) : null}
                         {user.blocked ? (
                           <span className="inline-flex items-center gap-1 rounded-full border border-red-400/40 bg-red-400/10 px-2 py-0.5 text-[10px] font-semibold text-red-200">
-                            <Lock size={10} /> Bloqueado
+                            <Ban size={10} /> Banido
                           </span>
                         ) : null}
                       </div>
@@ -295,45 +295,14 @@ export default function AdminUsers() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <select
-                      aria-label={`Alterar papel de ${user.name}`}
-                      value={String(user.role).toUpperCase()}
-                      disabled={isSelf || busy}
-                      onChange={(event) => handleRoleChange(user, event.target.value)}
-                      className="rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-foreground focus:border-primary focus:outline-none disabled:opacity-60"
-                    >
-                      <option value="COMMON">Comum</option>
-                      <option value="HOST">Anfitrião</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={isSelf || busy}
-                      onClick={() => void handleBlockToggle(user)}
-                      className="gap-1.5 rounded-full border-border px-3 text-xs"
-                    >
-                      {user.blocked ? (
-                        <>
-                          <Unlock size={12} /> Desbloquear
-                        </>
-                      ) : (
-                        <>
-                          <Lock size={12} /> Bloquear
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={isSelf || busy}
-                      onClick={() => void handleDelete(user)}
-                      className="gap-1.5 rounded-full border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 size={12} /> Excluir
-                    </Button>
+                    <AdminUserOperations
+                      user={user}
+                      isSelf={isSelf}
+                      busy={busy}
+                      onRoleChange={(nextRole) => void handleRoleChange(user, nextRole)}
+                      onBanToggle={() => handleBlockToggle(user)}
+                      onDelete={() => handleDelete(user)}
+                    />
                   </div>
                 </li>
               )

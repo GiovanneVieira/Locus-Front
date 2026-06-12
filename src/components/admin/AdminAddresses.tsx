@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link } from "react-router"
 import {
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   Loader2,
   MapPin,
   Search,
-  Trash2,
 } from "lucide-react"
 
+import { AdminHostingModerationActions } from "@/components/admin/AdminHostingModerationActions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAdminAddresses, useDeleteAddressAsAdmin } from "@/hooks/useAdmin"
@@ -59,10 +57,6 @@ export default function AdminAddresses() {
     [debouncedQuery, debouncedCity, page]
   )
 
-  useEffect(() => {
-    setPage(0)
-  }, [debouncedQuery, debouncedCity])
-
   const { data, isLoading, isFetching, isError, error, refetch } = useAdminAddresses(params)
   const deleteAddress = useDeleteAddressAsAdmin()
 
@@ -70,22 +64,30 @@ export default function AdminAddresses() {
   const totalPages = data?.totalPages ?? 0
   const totalElements = data?.totalElements ?? 0
 
-  async function handleDelete(address: Address) {
-    const confirmed = window.confirm(
-      `Remover o endereço "${address.title}"? Esta ação não pode ser desfeita.`
-    )
-    if (!confirmed) return
-
+  async function handleDelete(address: Address, reason: string) {
     setFeedback(null)
     try {
       await deleteAddress.mutateAsync(address.id)
-      setFeedback({ type: "ok", message: `"${address.title}" foi removido.` })
+      setFeedback({
+        type: "ok",
+        message: `"${address.title}" foi removido. Justificativa registrada localmente: ${reason}`,
+      })
     } catch (err) {
       setFeedback({
         type: "err",
         message: err instanceof ApiError ? err.message : "Não foi possível remover agora.",
       })
     }
+  }
+
+  function handleQueryChange(value: string) {
+    setQuery(value)
+    setPage(0)
+  }
+
+  function handleCityChange(value: string) {
+    setCity(value)
+    setPage(0)
   }
 
   return (
@@ -103,7 +105,7 @@ export default function AdminAddresses() {
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => handleQueryChange(event.target.value)}
               placeholder="Buscar por título"
               className="w-full rounded-full border-border bg-secondary/50 pl-9 sm:w-56"
             />
@@ -112,7 +114,7 @@ export default function AdminAddresses() {
             <MapPin className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={city}
-              onChange={(event) => setCity(event.target.value)}
+              onChange={(event) => handleCityChange(event.target.value)}
               placeholder="Cidade"
               className="w-full rounded-full border-border bg-secondary/50 pl-9 sm:w-44"
             />
@@ -202,33 +204,12 @@ export default function AdminAddresses() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5 rounded-full border-border px-3 text-xs"
-                    >
-                      <Link to={`/enderecos/${address.id}`}>
-                        <ExternalLink size={12} /> Ver detalhes
-                      </Link>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void handleDelete(address)}
-                      className="gap-1.5 rounded-full border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10"
-                    >
-                      {busy ? (
-                        <>
-                          <Loader2 size={12} className="animate-spin" /> Removendo…
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 size={12} /> Remover
-                        </>
-                      )}
-                    </Button>
+                    <AdminHostingModerationActions
+                      addressId={address.id}
+                      addressTitle={address.title}
+                      busy={busy}
+                      onRemove={(reason) => handleDelete(address, reason)}
+                    />
                   </div>
                 </li>
               )

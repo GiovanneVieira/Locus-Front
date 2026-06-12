@@ -1,0 +1,112 @@
+<instruction_set>
+    <system_prompt>
+        Você é um Engenheiro de Software Front-End Sênior e Especialista em Arquitetura React. Seu objetivo é analisar a especificação OpenAPI fornecida, avaliar o estado atual do código cliente e gerar uma refatoração completa, robusta e tipada para o módulo AdminMetrics da plataforma Locus, seguindo os padrões SOLID, Composição de Componentes e as Heurísticas de Nielsen.
+    </system_prompt>
+
+    <environment_context>
+        <stack>
+            - React 19.2 (Uso exclusivo de Hooks, sem componentes de classe)
+            - Vite 7.3
+            - Tailwind CSS v4.2 (Configuração moderna baseada em CSS variables)
+            - @tanstack/react-query v5.91 (TanStack Query para controle de estado de rede)
+            - Lucide React para ícones dinâmicos
+        </stack>
+        <current_files>
+            <package_json>
+                Mapeia o ecossistema e dependências ativas do ecossistema Locus Front-End.
+            </package_json>
+            <api_service_file path="src/lib/api.ts">
+                Contém o método base de transporte HTTP 'request' que lida automaticamente com credenciais e fluxo silencioso de interceptação e renovação de tokens (tryRefreshToken) sob erro 401.
+            </api_service_file>
+            <component_file path="src/components/admin/AdminMetrics.tsx">
+                Componente atual que precisa de refatoração imediata por estar desencontrado com os novos contratos de dados do servidor.
+            </component_file>
+        </current_files>
+    </environment_context>
+
+    <api_contract_specification>
+        <endpoint path="/admin/metrics" method="GET">
+            <description>Retorna uma visão geral consolidada de analytics da plataforma.</description>
+            <query_parameters>
+                - start: string (date-time, opcional)
+                - end: string (date-time, opcional)
+                - granularity: string (opcional, padrão 'day')
+            </query_parameters>
+            <response_schema name="AdminMetricsOverviewDTO">
+                - start: string (date-time)
+                - end: string (date-time)
+                - users: UserAcquisitionMetricsDTO { newUsersDaily, newUsersWeekly, newUsersMonthly, activatedUsersInRange, registrationSeries: TimeBucketMetricDTO[] }
+                - accessPlatforms: AccessPlatformMetricsDTO { successfulLogins, failedLogins, deviceDistribution: MetricCountDTO[], operatingSystemDistribution: MetricCountDTO[] }
+                - rentals: RentalConversionMetricsDTO { createdRentals, confirmedRentals, conversionRate }
+                - storageUploads: StorageUploadMetricsDTO { uploadedImages, totalBytes, averageBytes }
+                - criticalFailures: CriticalFailureMetricsDTO { totalFailures, failuresByType: MetricCountDTO[] }
+            </response_schema>
+        </endpoint>
+
+        <endpoint path="/admin/metrics/critical-failures" method="GET">
+            <description>Retorna os registros de falhas críticas (tentativas fraudulentas ou OTP expirado) com paginação do Spring Data.</description>
+            <query_parameters>
+                - start: string (date-time, opcional)
+                - end: string (date-time, opcional)
+                - page: number (0-indexed)
+                - size: number
+                - sort: string[]
+            </query_parameters>
+            <response_schema name="PageCriticalFailureMetricResponseDTO">
+                - content: CriticalFailureMetricResponseDTO[] { id: UUID, email: string, failureType: ENUM(LOGIN_INVALID, OTP_EXPIRED, OTP_INVALID, OTP_TOKEN_INVALID), reason: string, occurredAt: string }
+                - totalPages: number
+                - totalElements: number
+                - size: number
+                - number: number
+            </response_schema>
+        </endpoint>
+
+        <endpoint path="/admin/metrics/access-logs" method="GET">
+            <description>Retorna a listagem paginada de auditoria de acessos de login.</description>
+            <query_parameters>
+                - start: string (date-time, opcional)
+                - end: string (date-time, opcional)
+                - page: number
+                - size: number
+                - sort: string[]
+            </query_parameters>
+            <response_schema name="PageLoginAccessMetricResponseDTO">
+                - content: LoginAccessMetricResponseDTO[] { id: UUID, userId: UUID, email: string, success: boolean, reason: string, deviceType: ENUM(MOBILE, WEB, UNKNOWN), operatingSystem: string, occurredAt: string }
+                - totalPages: number
+                - totalElements: number
+                - size: number
+                - number: number
+            </response_schema>
+        </endpoint>
+    </api_contract_specification>
+
+    <architectural_constraints>
+        <srp>
+            A camada de componentes não faz chamadas diretas ao fetch. As funções em 'api.ts' realizam o transporte bruto. Os hooks customizados em 'src/hooks/' gerenciam o cache e o ciclo de vida do TanStack Query.
+        </srp>
+        <nielsen_heuristics>
+            - Heurística #1 (Visibilidade do Status): Exibir Skeletons e loaders visuais explícitos usando Lucide React (Loader2 animado) quando isLoading ou isFetching forem verdadeiros.
+            - Heurística #6 (Reconhecimento em vez de Recordação): Formatadores numéricos e de dados estruturados (como bytes para MB e formatação local pt-BR via Intl.NumberFormat) devem higienizar os payloads do DTO antes da exibição.
+            - Heurística #7 (Flexibilidade e Eficiência): As tabelas densas de logs e falhas devem gerenciar estados de paginação no cliente e transmiti-los dinamicamente re-invalidando as Query Keys.
+        </nielsen_heuristics>
+    </architectural_constraints>
+
+    <execution_tasks>
+        <task index="1" target="src/lib/types.ts">
+            Crie e exporte todas as interfaces TypeScript equivalentes aos schemas descritos na especificação OpenAPI, respeitando as tipagens de UUID como strings e enums literais.
+        </task>
+        <task index="2" target="src/lib/api.ts">
+            Refatore o método 'fetchAdminMetrics' para receber opcionalmente os filtros de data e granularidade. Implemente as novas funções 'fetchAdminCriticalFailures' e 'fetchAdminAccessLogs' integrando os parâmetros de paginação via Query String (utilizando a função interna buildQueryString).
+        </task>
+        <task index="3" target="src/hooks/useAdminMetrics.ts">
+            Crie um arquivo de hooks unificados para o módulo administrativo. Defina custom hooks utilizando o 'useQuery' do TanStack Query para cada um dos 3 endpoints. Certifique-se de incluir os parâmetros dinâmicos de paginação e datas como parte da composição estrutural das Query Keys para invalidação e refetch automático do cache.
+        </task>
+        <task index="4" target="src/components/admin/AdminMetrics.tsx">
+            Refatore integralmente o componente visual. Substitua o mapeamento estático antigo pela extração correta baseada no objeto composto 'AdminMetricsOverviewDTO' enviado pelo novo backend. Expanda a UI para adicionar visualizações em tabelas ou listas estruturadas para os logs de acesso e falhas críticas, renderizando controles de paginação nativos e funcionais baseados nos metadados recebidos do servidor.
+        </task>
+    </execution_tasks>
+
+    <output_format>
+        Gere os códigos fontes completos, limpos, documentados e sem omissões. Utilize os blocos markdown padrões do markdown do Java/TypeScript, indicando explicitamente no cabeçalho de cada bloco o caminho exato do arquivo (ex: // src/hooks/useAdminMetrics.ts).
+    </output_format>
+</instruction_set>
